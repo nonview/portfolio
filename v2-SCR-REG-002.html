@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>화면기획서 v2 — 회원가입</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --surface: #fff;
+    --border: #ddd;
+    --text: #1a1a1a;
+    --text-sub: #888;
+    --accent: #2563eb;
+    --font: 'Noto Sans KR', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); }
+
+  /* 헤더 */
+  .header {
+    background:var(--surface);
+    padding:20px 32px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .crumb { font-size:12px; color:#aaa; font-weight:600; }
+  .crumb .s { margin:0 6px; }
+  .title { font-size:24px; font-weight:800; }
+  .sid { font-size:11px; color:var(--accent); background:#e8eefb; padding:3px 8px; border-radius:4px; font-weight:600; font-family:monospace; }
+
+  /* 메인 레이아웃 */
+  .main {
+    display:flex;
+    padding:20px 32px 0;
+    gap:32px;
+    align-items:flex-start;
+    position:relative;
+  }
+
+  /* === 왼쪽: 영역라벨 + 화면 === */
+  .screen-panel {
+    display:flex;
+    gap:0;
+    flex-shrink:0;
+  }
+
+  /* 영역 라벨 (화면 왼쪽) */
+  .labels {
+    display:flex;
+    flex-direction:column;
+    width:70px;
+    flex-shrink:0;
+  }
+  .lbl {
+    flex:none;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    position:relative;
+  }
+  .lbl-text {
+    font-size:12px;
+    font-weight:600;
+    color:#888;
+    text-align:right;
+    padding-right:12px;
+    line-height:1.3;
+  }
+
+  /* 화면 프레임 */
+  .frame {
+    width:320px;
+    background:var(--surface);
+    border:1px solid #ccc;
+    border-radius:12px;
+    overflow:visible;
+    flex-shrink:0;
+    position:relative;
+  }
+  .zone {
+    padding:20px;
+    border-bottom:1px dashed #e0e0e0;
+    position:relative;
+  }
+  .zone:last-child { border-bottom:none; }
+
+  /* 화면 안 번호 마커 */
+  .pin {
+    position:absolute;
+    width:22px; height:22px; border-radius:50%;
+    background:#e0e0e0; color:#888;
+    font-size:11px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    z-index:5;
+    transition: all .2s;
+    user-select:none;
+  }
+  .pin:hover { background:#ccc; }
+  .pin.active { background:var(--accent); color:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.2); }
+
+  /* 클릭 시 영역 하이라이트 */
+  .zone-highlight {
+    display:none;
+    position:absolute;
+    inset:4px;
+    border:2px solid var(--accent);
+    border-radius:8px;
+    pointer-events:none;
+    z-index:4;
+  }
+  .zone.active .zone-highlight { display:block; }
+
+  /* 연결선 SVG */
+  #connSvg {
+    position:absolute;
+    top:0; left:0;
+    pointer-events:none;
+    z-index:3;
+    overflow:visible;
+  }
+
+  /* === 가운데: 항목설명 === */
+  .items {
+    flex:1;
+    min-width:220px;
+    max-width:320px;
+  }
+  .itm {
+    display:flex;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid #eee;
+    align-items:flex-start;
+    border-radius:6px;
+    transition: background .2s;
+    margin:0 -8px;
+    padding-left:8px;
+    padding-right:8px;
+  }
+  .itm:last-child { border-bottom:none; }
+  .itm.active { background:#e8eefb; }
+  /* 설명 div (num 다음 자식) */
+  .itm > div:nth-child(2) { flex:1; min-width:0; }
+  .num {
+    width:24px; height:24px; border-radius:50%;
+    background:#e0e0e0; color:#888; font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1px;
+    transition: all .2s;
+  }
+  .itm.active .num { background:var(--accent); color:#fff; }
+  .itm-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+  .itm-desc { font-size:12px; color:#777; line-height:1.5; }
+  .itm-note { font-size:11px; color:#aaa; margin-top:4px; font-style:italic; }
+
+  /* === 오른쪽: 상세내용 컬럼 === */
+  .detail-col {
+    flex: 1;
+    min-width: 260px;
+    max-width: 400px;
+  }
+  .dtl {
+    padding: 14px 0 14px 20px;
+    border-bottom: 1px solid #eee;
+    border-left: 2px solid #e8eefb;
+    min-height: 53px;
+    transition: border-left-color .2s, background .2s;
+  }
+  .dtl:last-child { border-bottom: none; }
+  .dtl.active { border-left-color: var(--accent); background: #f5f8ff; border-radius: 0 6px 6px 0; }
+  .detail-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #b0b0b0;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .dtl-body { font-size: 12px; color: #666; line-height: 1.5; }
+
+  /* 하단 안내 */
+  .footer-note {
+    padding:20px 32px 0;
+  }
+  .note-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:28px;
+  }
+  .note-title {
+    font-size:14px; font-weight:700; margin-bottom:12px;
+    padding-left:12px;
+    border-left:3px solid var(--accent);
+  }
+  .note-body { font-size:12px; color:#777; line-height:1.7; }
+  /* 약관·정책 섹션 */
+  .policy-section { padding:20px 32px 10px; }
+  .policy-card { background:#fff; border:1px solid #ddd; border-radius:12px; padding:28px; display:flex; flex-direction:column; gap:24px; }
+  .policy-title { font-size:14px; font-weight:700; margin-bottom:16px; padding-left:12px; border-left:3px solid #7c3aed; }
+  .policy-group { display:flex; flex-direction:column; gap:8px; }
+  .policy-group-title { font-size:12px; font-weight:700; color:#333; margin-bottom:6px; }
+  .policy-item { font-size:12px; color:#555; line-height:1.7; padding:10px 14px; background:#f7f7f5; border-radius:8px; border-left:3px solid #ddd; }
+  .policy-item strong { color:#222; }
+  .policy-item .tag { display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; margin-right:4px; }
+  .tag-required { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+  .tag-optional { background:#f0fdf4; color:#166534; border:1px solid #86efac; }
+  .tag-conditional { background:#fef9ec; color:#92400e; border:1px solid #fde68a; }
+  .policy-notice { font-size:11px; color:#7c3aed; background:#f5f3ff; border:1px solid #ddd8fe; border-radius:6px; padding:10px 14px; }
+
+  ::-webkit-scrollbar{display:none !important;} *{scrollbar-width:none !important;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="crumb"><span>가입</span><span class="s">›</span><span>회원가입</span></div>
+  <h1 class="title">회원가입</h1>
+  <span class="sid">SCR-REG-002</span>
+</header>
+
+<div class="main">
+
+  <!-- 왼쪽: 영역라벨 + 화면 -->
+  <div class="screen-panel">
+
+    <div style="position:relative;display:flex;">
+      <div class="labels" id="labels">
+        <div class="lbl"><span class="lbl-text">상단 영역</span></div>
+        <div class="lbl"><span class="lbl-text">입력 영역</span></div>
+        <div class="lbl"><span class="lbl-text">하단 버튼<br>영역</span></div>
+      </div>
+      <svg id="bracketSvg" width="24" style="flex-shrink:0;overflow:visible;"></svg>
+    </div>
+
+    <!-- 화면 프레임 -->
+    <div class="frame" id="frame">
+
+      <!-- 상단 영역 -->
+      <div class="zone" id="z0" data-idx="">
+        <div class="zone-highlight"></div>
+        <div style="font-size:18px;font-weight:800;color:#222;padding-bottom:16px;">회원가입</div>
+      </div>
+
+      <!-- 입력 영역 -->
+      <div class="zone" id="z1" data-idx="0,1,2,3,4">
+        <div class="zone-highlight"></div>
+
+        <!-- ① 이메일 + 인증하기 -->
+        <div class="item-area" data-highlight="0" style="position:relative;margin-bottom:16px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="display:flex;gap:8px;align-items:stretch;">
+            <div style="flex:1;padding:12px 14px;border-bottom:2px solid #222;font-size:13px;color:#aaa;">이메일</div>
+            <div style="padding:12px 16px;background:#e8e8e8;border-radius:6px;font-size:12px;color:#888;font-weight:600;white-space:nowrap;">인증하기</div>
+          </div>
+          <div class="pin" data-idx="0" style="top:-6px;right:-8px;">1</div>
+        </div>
+
+        <!-- ② 인증번호 6자리 -->
+        <div class="item-area" data-highlight="1" style="position:relative;margin-bottom:16px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1.5px solid #ccc;">
+            <span style="font-size:13px;color:#aaa;">인증번호 6자리</span>
+            <span style="margin-left:auto;font-size:13px;color:#333;font-weight:600;">3:00</span>
+            <span style="margin-left:8px;font-size:12px;color:#888;font-weight:600;">재전송</span>
+          </div>
+          <div class="pin" data-idx="1" style="top:-6px;right:-8px;">2</div>
+        </div>
+
+        <!-- ③ 비밀번호 -->
+        <div class="item-area" data-highlight="2" style="position:relative;margin-bottom:16px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1.5px solid #ccc;">
+            <span style="font-size:13px;color:#aaa;">비밀번호</span>
+            <svg style="margin-left:auto;" width="20" height="14" viewBox="0 0 20 14"><path d="M10 0C4 0 0 7 0 7s4 7 10 7 10-7 10-7S16 0 10 0z" fill="none" stroke="#bbb" stroke-width="1.5"/><circle cx="10" cy="7" r="3" fill="none" stroke="#bbb" stroke-width="1.5"/></svg>
+          </div>
+          <div class="pin" data-idx="2" style="top:-6px;right:-8px;">3</div>
+        </div>
+
+        <!-- ④ 비밀번호 확인 -->
+        <div class="item-area" data-highlight="3" style="position:relative;margin-bottom:20px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1.5px solid #ccc;">
+            <span style="font-size:13px;color:#aaa;">비밀번호 확인</span>
+          </div>
+          <div class="pin" data-idx="3" style="top:-6px;right:-8px;">4</div>
+        </div>
+
+        <!-- ⑤ 약관 동의 -->
+        <div class="item-area" data-highlight="4" style="position:relative;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="padding:14px;background:#f2f2f2;border-radius:8px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;font-weight:600;color:#333;">약관에 동의합니다</span>
+            <span style="font-size:16px;color:#bbb;">☑</span>
+          </div>
+          <div class="pin" data-idx="4" style="top:-6px;right:-8px;">5</div>
+        </div>
+
+      </div>
+
+      <!-- 하단 버튼 영역 -->
+      <div class="zone" id="z2" data-idx="5">
+        <div class="zone-highlight"></div>
+        <div style="padding:14px;border-radius:8px;border:1.5px solid #ccc;color:#aaa;text-align:center;font-size:14px;font-weight:700;position:relative;">
+          다음
+          <div class="pin" data-idx="5" style="top:-8px;right:-8px;">6</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- 연결선 SVG -->
+  <svg id="connSvg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;overflow:visible;"></svg>
+
+  <!-- 가운데: 항목설명 -->
+  <div class="items" id="items">
+
+    <div class="itm" data-idx="0">
+      <div class="num">1</div>
+      <div>
+        <div class="itm-title">이메일 + 인증하기</div>
+        <div class="itm-desc">
+          · 빈 값이 디폴트<br>
+          · 이메일 유효성 체크 성공 시 인증하기 버튼 활성화<br>
+          · 인증하기 클릭 → 이메일로 인증번호 발송, ② 활성화<br>
+          · 인증 완료 전 수정 시, 유효성 재체크 후 인증하기 버튼 활성화
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="1">
+      <div class="num">2</div>
+      <div>
+        <div class="itm-title">인증번호 6자리</div>
+        <div class="itm-desc">
+          · ① 인증하기 클릭 후 활성화<br>
+          · 3분 타이머 카운트다운 (만료 시 재입력 필요)<br>
+          · 재전송 클릭 → 새 인증번호 발송, 타이머 리셋<br>
+          · 6자리 입력 완료 시 자동 검증<br>
+          · 불일치 시: <strong style="color:#e53935;">"인증번호가 유효하지 않습니다"</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="2">
+      <div class="num">3</div>
+      <div>
+        <div class="itm-title">비밀번호</div>
+        <div class="itm-desc">
+          · 빈 값이 디폴트, 마스킹(*) 처리<br>
+          · 눈 아이콘 클릭 → 마스킹 토글<br>
+          · 포커스(입력 시작) 시 우측에 실시간 체크리스트 노출<br>
+          · 조건 충족 시 실시간으로 ☐ → <span style="color:#22c55e;">☑</span> 변경<br>
+          · 허용되지 않는 문자 입력 시 즉시 삭제 + 툴팁 안내 (2~3초 자동 사라짐)<br>
+          · 모든 항목 충족 시 체크리스트 자동 숨김<br>
+          · 미충족 상태에서 다음 필드 이동 시: <strong style="color:#e53935;">"비밀번호 조건을 확인해주세요"</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="3">
+      <div class="num">4</div>
+      <div>
+        <div class="itm-title">비밀번호 확인</div>
+        <div class="itm-desc">
+          · 빈 값이 디폴트<br>
+          · ③과 동일한 값 입력 시 입력 필드 우측에 <span style="color:#22c55e;">✓</span> 표시<br>
+          · 불일치 시: <strong style="color:#e53935;">"비밀번호가 일치하지 않습니다"</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="4">
+      <div class="num">5</div>
+      <div>
+        <div class="itm-title">약관 동의</div>
+        <div class="itm-desc">
+          · 미동의가 디폴트<br>
+          · 체크 시 동의 처리 (필수)<br>
+          · 약관 상세 보기 링크 포함
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="5">
+      <div class="num">6</div>
+      <div>
+        <div class="itm-title">다음 버튼</div>
+        <div class="itm-desc">
+          · 비활성이 디폴트, 비활성 시 클릭 불가<br>
+          · ①인증완료 + ③비밀번호 입력 + ④일치확인 + ⑤약관동의 시 활성화(파란색)<br>
+          · 클릭 시 다음 화면(가입목적선택)으로 이동
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 오른쪽: 상세내용 -->
+  <div class="detail-col" id="detailCol">
+
+    <!-- 1: 이메일 유효성 체크 -->
+    <div class="dtl" data-idx="0">
+      <div class="detail-label">유효성 체크</div>
+      <div class="dtl-body">
+        <span style="display:block;padding:8px 10px;background:#f7f7f5;border-radius:4px;font-size:11.5px;color:#666;line-height:1.7;">
+          · @ 포함 여부<br>
+          · 공백(띄어쓰기) 포함 불가<br>
+          · @ 앞뒤로 문자 존재 여부 (예: user@domain.com)<br>
+          · 도메인 형식 확인 (.com, .co.jp 등)<br>
+          · 기가입된 이메일 중복 체크<br>
+          <span style="display:block;margin-top:4px;">미충족 시: <strong style="color:#e53935;">"이메일이 유효하지 않습니다"</strong></span>
+          <span style="display:block;">중복 시: <strong style="color:#e53935;">"이미 가입된 이메일입니다"</strong></span>
+        </span>
+      </div>
+    </div>
+
+    <!-- 2: 인증번호 — 별도 상세 없음 -->
+    <div class="dtl" data-idx="1"></div>
+
+    <!-- 3: 비밀번호 요구사항 + 툴팁 -->
+    <div class="dtl" data-idx="2">
+      <div class="detail-label">비밀번호 요구사항</div>
+      <div class="dtl-body">
+        <div style="margin-bottom:10px;padding:10px 12px;background:#f7f7f5;border-radius:6px;font-size:11.5px;color:#666;line-height:2;">
+          <div><span style="color:#ccc;">☐</span> 8~16자</div>
+          <div><span style="color:#ccc;">☐</span> 영문 대문자·소문자·숫자·특수문자 중 3종 이상</div>
+          <div><span style="color:#22c55e;">☑</span> <span style="color:#22c55e;">공백 미포함</span></div>
+          <div><span style="color:#22c55e;">☑</span> <span style="color:#22c55e;">동일 문자 3회 연속 없음</span></div>
+          <div><span style="color:#ccc;">☐</span> 연속 문자 3자 이상 없음 (abc, 123 등)</div>
+          <div><span style="color:#ccc;">☐</span> 이메일과 다른 비밀번호</div>
+          <div><span style="color:#ccc;">☐</span> 흔한 비밀번호가 아님</div>
+          <div style="margin-top:6px;font-size:10.5px;color:#aaa;">허용 특수문자: <code style="background:#eee;padding:1px 4px;border-radius:2px;">! @ # $ % ^ &amp; * ( ) - _ = + [ ] { } | ; : ' " , . &lt; &gt; / ? ~ `</code></div>
+        </div>
+        <div class="detail-label">입력 불가 문자 알림 (툴팁)</div>
+        <div style="display:inline-block;padding:6px 10px;background:#333;color:#fff;border-radius:6px;font-size:11px;position:relative;line-height:1.5;">
+          허용되지 않는 문자입니다. 사용 가능: ! @ # $ % ^ &amp; * ( ) - _ = + 등
+          <div style="position:absolute;top:-5px;left:20px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:5px solid #333;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4: 비밀번호 확인 — 별도 상세 없음 -->
+    <div class="dtl" data-idx="3"></div>
+
+    <!-- 5: 약관동의 운영 기준 -->
+    <div class="dtl" data-idx="4">
+      <div class="detail-label">약관·동의 운영 기준</div>
+      <div class="dtl-body">
+        <!-- ① 개인정보 동의 -->
+        <div style="margin-bottom:12px;">
+          <div style="font-size:11.5px;font-weight:700;color:#333;margin-bottom:6px;padding-left:10px;border-left:3px solid #7c3aed;">① 개인정보 동의 — 목적별 분리 운영 <span style="font-weight:400;color:#888;">(개인정보보호법 제17~21·27·28조)</span></div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="font-size:11.5px;color:#555;padding:7px 10px;background:#f7f7f5;border-radius:6px;border-left:3px solid #ddd;line-height:1.6;">
+              <span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;margin-right:4px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;">필수</span><strong>계정 운영</strong> — 서비스 제공에 필요한 개인정보 수집·이용
+            </div>
+            <div style="font-size:11.5px;color:#555;padding:7px 10px;background:#f7f7f5;border-radius:6px;border-left:3px solid #ddd;line-height:1.6;">
+              <span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;margin-right:4px;background:#f0fdf4;color:#166534;border:1px solid #86efac;">선택</span><strong>마케팅</strong> — 광고·프로모션 목적 활용
+            </div>
+            <div style="font-size:11.5px;color:#555;padding:7px 10px;background:#f7f7f5;border-radius:6px;border-left:3px solid #ddd;line-height:1.6;">
+              <span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;margin-right:4px;background:#fef9ec;color:#92400e;border:1px solid #fde68a;">해당 시 필수</span><strong>제3자 제공</strong> — 제공처·이용목적·항목을 동의서에 개별 명시
+            </div>
+            <div style="font-size:11.5px;color:#555;padding:7px 10px;background:#f7f7f5;border-radius:6px;border-left:3px solid #ddd;line-height:1.6;">
+              <span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;margin-right:4px;background:#fef9ec;color:#92400e;border:1px solid #fde68a;">해당 시 필수</span><strong>국외 이전</strong> — 이전 국가·제공처·이용목적·항목을 동의서에 개별 명시
+            </div>
+          </div>
+        </div>
+        <!-- ② 약관·서면 5개 그룹 -->
+        <div style="margin-bottom:12px;">
+          <div style="font-size:11.5px;font-weight:700;color:#333;margin-bottom:6px;padding-left:10px;border-left:3px solid #7c3aed;">② 약관·서면 5개 그룹 <span style="font-weight:400;color:#888;">— 그룹별 분리 관리</span></div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="font-size:11.5px;color:#555;padding:7px 10px;background:#f7f7f5;border-radius:6px;border-left:3px solid #ddd;line-height:1.6;">(1) 플랫폼 서비스 이용약관</div>
+            <div style="font-size:11.5px;color:#555;padding:7px 10px;background:#f7f7f5;border-radius:6px;border-left:3px solid #ddd;line-height:1.6;">(2) 금융상품 거래 관련 약관 — 금상법 제37조의3, 계약체결전 교부서면</div>
+            <div style="font-size:11.5px;color:#555;padding:7px 10px;background:#f7f7f5;border-radius:6px;border-left:3px solid #ddd;line-height:1.6;"><span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;margin-right:4px;background:#fef9ec;color:#92400e;border:1px solid #fde68a;">해당 시</span>(3) 외국증권 거래계좌 약관 / 취급규정</div>
+            <div style="font-size:11.5px;color:#555;padding:7px 10px;background:#f7f7f5;border-radius:6px;border-left:3px solid #ddd;line-height:1.6;">(4) 개인정보 수집·이용·제3자 제공·국외 이전 동의 — ① 항목 참조</div>
+            <div style="font-size:11.5px;color:#555;padding:7px 10px;background:#f7f7f5;border-radius:6px;border-left:3px solid #ddd;line-height:1.6;">
+              (5) 반사회적 세력 해당 없음 확약서 + PEP 비해당 확인동의
+              <div style="font-size:11px;color:#666;line-height:1.8;margin-top:5px;">
+                · PEP(Politically Exposed Person): 초기 단계 이용 대상 제외 방침을 약관에 명시, 가입 시 비해당 확인동의 수령<br>
+                · 하이리스크 거래 범위: 북한·이란 등 제재 대상국 국적자와의 거래 포함
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ③ 개발 체크포인트 -->
+        <div>
+          <div style="font-size:11.5px;font-weight:700;color:#333;margin-bottom:6px;padding-left:10px;border-left:3px solid #7c3aed;">③ 개발 체크포인트</div>
+          <div style="font-size:11.5px;color:#555;padding:7px 10px;background:#f7f7f5;border-radius:6px;border-left:3px solid #ddd;line-height:1.6;">
+            <span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;margin-right:4px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;">필수</span><strong>중요항목 개별 체크박스</strong> — 금융분야 개인정보보호 GL 제3조. 중요 동의항목은 일괄 동의 방식 불가, 항목별 개별 체크박스 구현 필수
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6: 별도 상세 없음 -->
+    <div class="dtl" data-idx="5"></div>
+
+  </div>
+
+</div>
+
+<!-- 하단 안내 -->
+<section class="footer-note">
+  <div class="note-card">
+    <div class="note-title">비고</div>
+    <div class="note-body">
+      · 이 화면은 모든 케이스(개인/법인/조합)에서 유저타입선택 다음에 오는 공통 화면입니다.<br>
+      · 상태분기 없음 — 모든 유저가 동일한 플로우를 거칩니다.<br>
+      · 다음 화면: 가입목적선택 (SCR-REG-003)<br>
+      <br>
+      <strong>[공통 규칙] 순차 입력</strong><br>
+      · 입력 순서는 위에서 아래로 ①→②→③→④→⑤ 순차 진행<br>
+      · 현재 입력해야 하는 칸의 하단 줄이 <strong>검은색(#222)</strong>으로 표시됨<br>
+      · 아직 차례가 아닌 칸은 회색(#ccc) 줄 유지<br>
+      · 이전 단계 완료 후 다음 칸이 활성화(하단 줄 검은색 전환)<br>
+      <br>
+      <strong>[공통 규칙] 스크롤</strong><br>
+      · 내용이 화면을 초과할 경우, 전체 영역이 세로 스크롤됨
+    </div>
+  </div>
+</section>
+
+<script>
+// ── 영역 브래킷 그리기 ──
+function drawBrackets() {
+  const zones = [document.getElementById('z0'), document.getElementById('z1'), document.getElementById('z2')];
+  const labels = document.querySelectorAll('.lbl');
+  const svg = document.getElementById('bracketSvg');
+  if (!zones.length || !labels.length) return;
+
+  let totalH = 0;
+  zones.forEach((z, i) => {
+    const h = z.offsetHeight;
+    if (labels[i]) labels[i].style.height = h + 'px';
+    totalH += h;
+  });
+
+  svg.setAttribute('height', totalH);
+  svg.innerHTML = '';
+
+  let y = 0;
+  zones.forEach((z) => {
+    const h = z.offsetHeight;
+    const top = y + 6, bot = y + h - 6, x = 4;
+
+    const mk = (tag, attrs) => {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
+      return el;
+    };
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x+8,y2:top,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:bot,x2:x+8,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    y += h;
+  });
+}
+
+// ── 연결선 그리기 ──
+function drawConnectors() {
+  const svg = document.getElementById('connSvg');
+  const main = document.querySelector('.main');
+  if (!svg || !main) return;
+
+  svg.innerHTML = '';
+  const mRect = main.getBoundingClientRect();
+
+  document.querySelectorAll('.pin').forEach(pin => {
+    const idx = pin.dataset.idx;
+    const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+    if (!itm) return;
+
+    const pRect = pin.getBoundingClientRect();
+    const iRect = itm.querySelector('.num').getBoundingClientRect();
+
+    const x1 = pRect.right - mRect.left + 4;
+    const y1 = pRect.top + pRect.height/2 - mRect.top;
+    const x2 = iRect.left - mRect.left - 4;
+    const y2 = iRect.top + iRect.height/2 - mRect.top;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
+    line.setAttribute('stroke', '#ccc');
+    line.setAttribute('stroke-width', '1');
+    line.setAttribute('stroke-dasharray', '4,3');
+    line.setAttribute('data-idx', idx);
+    svg.appendChild(line);
+  });
+}
+
+// ── 클릭 인터랙션 ──
+let activeIdx = null;
+
+function selectItem(idx) {
+  if (activeIdx === idx) { clearSelection(); return; }
+  clearSelection();
+  activeIdx = idx;
+
+  // 핀 활성화
+  const pin = document.querySelector(`.pin[data-idx="${idx}"]`);
+  if (pin) pin.classList.add('active');
+
+  // 영역 하이라이트 — 개별 item-area 찾기
+  const area = document.querySelector(`.item-area[data-highlight="${idx}"]`);
+  if (area) area.style.borderColor = '#2563eb';
+
+  // zone은 하단 버튼처럼 단일 항목인 경우만 하이라이트
+  document.querySelectorAll('.zone').forEach(z => {
+    const zoneIdxList = (z.dataset.idx || '').split(',');
+    if (zoneIdxList.length === 1 && zoneIdxList.includes(idx)) z.classList.add('active');
+  });
+
+  // 항목 하이라이트
+  const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+  if (itm) itm.classList.add('active');
+
+  // 상세내용 하이라이트
+  const dtl = document.querySelector(`.dtl[data-idx="${idx}"]`);
+  if (dtl) dtl.classList.add('active');
+
+  // 연결선 색 변경
+  const line = document.querySelector(`#connSvg line[data-idx="${idx}"]`);
+  if (line) { line.setAttribute('stroke', '#2563eb'); line.setAttribute('stroke-width', '1.5'); }
+}
+
+function clearSelection() {
+  activeIdx = null;
+  document.querySelectorAll('.pin.active').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.zone.active').forEach(z => z.classList.remove('active'));
+  document.querySelectorAll('.itm.active').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.dtl.active').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.item-area').forEach(a => a.style.borderColor = 'transparent');
+  document.querySelectorAll('#connSvg line').forEach(l => { l.setAttribute('stroke','#ccc'); l.setAttribute('stroke-width','1'); });
+}
+
+// 이벤트 바인딩
+document.addEventListener('click', (e) => {
+  const pin = e.target.closest('.pin');
+  const itm = e.target.closest('.itm');
+  const dtl = e.target.closest('.dtl');
+  if (pin) { selectItem(pin.dataset.idx); return; }
+  if (itm && itm.dataset.idx !== undefined) { selectItem(itm.dataset.idx); return; }
+  if (dtl && dtl.dataset.idx !== undefined) { selectItem(dtl.dataset.idx); return; }
+  if (!e.target.closest('.zone') && !e.target.closest('.itm') && !e.target.closest('.dtl')) clearSelection();
+});
+
+window.addEventListener('load', () => { drawBrackets(); drawConnectors(); });
+window.addEventListener('resize', () => { drawBrackets(); drawConnectors(); });
+</script>
+
+<script>(function(){function r(){var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight);window.parent&&window.parent.postMessage({type:"iframeHeight",h:h},"*");}if(document.readyState==="complete"){r();setTimeout(r,400);setTimeout(r,1200);}else{window.addEventListener("load",function(){r();setTimeout(r,400);setTimeout(r,1200);});}})();</script>
+</body>
+</html>

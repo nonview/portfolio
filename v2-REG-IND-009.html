@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>화면기획서 v2 — 고객정보입력 (해외)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --surface: #fff;
+    --border: #ddd;
+    --text: #1a1a1a;
+    --text-sub: #888;
+    --accent: #2563eb;
+    --font: 'Noto Sans KR', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); }
+
+  .header {
+    background:var(--surface); padding:20px 32px; border-bottom:1px solid var(--border);
+    display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+  }
+  .crumb { font-size:12px; color:#aaa; font-weight:600; }
+  .crumb .s { margin:0 6px; }
+  .title { font-size:24px; font-weight:800; }
+  .sid { font-size:11px; color:var(--accent); background:#e8eefb; padding:3px 8px; border-radius:4px; font-weight:600; font-family:monospace; }
+
+  .main {
+    display:flex; padding:20px 32px 0; gap:32px; align-items:flex-start; position:relative;
+  }
+  .screen-panel { display:flex; gap:0; flex-shrink:0; }
+  .labels { display:flex; flex-direction:column; width:70px; flex-shrink:0; }
+  .lbl { flex:none; display:flex; align-items:center; justify-content:flex-end; position:relative; }
+  .lbl-text { font-size:12px; font-weight:600; color:#888; text-align:right; padding-right:12px; line-height:1.3; }
+
+  .frame {
+    width:320px; background:var(--surface); border:1px solid #ccc; border-radius:12px;
+    overflow:visible; flex-shrink:0; position:relative;
+  }
+  .zone { padding:20px; border-bottom:1px dashed #e0e0e0; position:relative; }
+  .zone:last-child { border-bottom:none; }
+
+  .pin {
+    position:absolute; width:22px; height:22px; border-radius:50%;
+    background:#fff; color:#333; border:1.5px solid #333;
+    font-size:11px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:5; transition: all .2s; user-select:none;
+  }
+  .pin:hover { background:#f0f0f0; }
+  .pin.active { background:var(--accent); color:#fff; border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.2); }
+
+  .zone-highlight {
+    display:none; position:absolute; inset:4px;
+    border:2px solid var(--accent); border-radius:8px; pointer-events:none; z-index:4;
+  }
+  .zone.active .zone-highlight { display:block; }
+
+  #connSvg { position:absolute; top:0; left:0; pointer-events:none; z-index:3; overflow:visible; }
+
+  .items { flex:1; min-width:220px; max-width:320px; }
+  .itm > div:nth-child(2) { flex:1; min-width:0; }
+  .itm {
+    display:flex; gap:12px; padding:14px 0; border-bottom:1px solid #eee;
+    align-items:flex-start; border-radius:6px; transition: background .2s;
+    margin:0 -8px; padding-left:8px; padding-right:8px;
+  }
+  .itm:last-child { border-bottom:none; }
+  .itm.active { background:#e8eefb; }
+  .num {
+    width:24px; height:24px; border-radius:50%;
+    background:#e0e0e0; color:#888; font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1px; transition: all .2s;
+  }
+  .itm.active .num { background:var(--accent); color:#fff; }
+  .itm-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+  .itm-desc { font-size:12px; color:#777; line-height:1.5; }
+
+  /* === 오른쪽: 상세내용 컬럼 === */
+  .detail-col { flex:1; min-width:260px; max-width:400px; }
+  .dtl { padding:14px 0 14px 20px; border-bottom:1px solid #eee; border-left:2px solid #e8eefb; min-height:53px; transition:border-left-color .2s, background .2s; }
+  .dtl:last-child { border-bottom:none; }
+  .dtl.active { border-left-color:#2563eb; background:#f5f8ff; border-radius:0 6px 6px 0; }
+  .detail-label { font-size:10px; font-weight:700; color:#b0b0b0; letter-spacing:0.07em; text-transform:uppercase; margin-bottom:6px; }
+  .dtl-body { font-size:12px; color:#666; line-height:1.5; }
+
+  .footer-note { padding:20px 32px 0; }
+  .note-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; }
+  .note-title { font-size:14px; font-weight:700; margin-bottom:12px; padding-left:12px; border-left:3px solid var(--accent); }
+  .note-body { font-size:12px; color:#777; line-height:1.7; }
+  ::-webkit-scrollbar{display:none !important;} *{scrollbar-width:none !important;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="crumb"><span>가입</span><span class="s">›</span><span>개인</span><span class="s">›</span><span>고객정보입력 (해외)</span></div>
+  <h1 class="title">고객정보입력 (해외)</h1>
+  <span class="sid">REG-IND-009</span>
+</header>
+
+<div class="main">
+
+  <div class="screen-panel">
+    <div style="position:relative;display:flex;">
+      <div class="labels" id="labels">
+        <div class="lbl"><span class="lbl-text">상단 영역</span></div>
+        <div class="lbl"><span class="lbl-text">입력 영역</span></div>
+        <div class="lbl"><span class="lbl-text">하단 버튼<br>영역</span></div>
+      </div>
+      <svg id="bracketSvg" width="24" style="flex-shrink:0;overflow:visible;"></svg>
+    </div>
+
+    <div class="frame" id="frame">
+
+      <!-- 상단 영역: 스텝바 -->
+      <div class="zone" id="z0" data-idx="">
+        <div class="zone-highlight"></div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:0;padding:8px 0 12px;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <div style="width:28px;height:28px;background:#3b82f6;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;">1</div>
+            <div style="font-size:10px;font-weight:600;color:#3b82f6;">고객정보입력</div>
+          </div>
+          <div style="width:60px;height:2px;background:#ccc;margin:0 4px;margin-bottom:18px;"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+            <div style="width:28px;height:28px;background:#e0e0e0;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#888;font-size:12px;font-weight:700;">2</div>
+            <div style="font-size:10px;font-weight:600;color:#aaa;">본인확인</div>
+          </div>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:#222;">고객정보를 입력해 주세요</div>
+      </div>
+
+      <!-- 입력 영역 -->
+      <div class="zone" id="z1" data-idx="0,1,2,3,4,5,6,7">
+        <div class="zone-highlight"></div>
+
+        <!-- ① 국적 -->
+        <div class="item-area" data-highlight="0" style="position:relative;margin-bottom:14px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="font-size:11px;color:#aaa;margin-bottom:4px;">국적</div>
+          <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:2px solid #222;font-size:13px;color:#222;font-weight:500;">
+            <span>🇸🇬 싱가포르</span>
+            <span style="margin-left:auto;font-size:12px;color:#bbb;">▽</span>
+          </div>
+          <div class="pin" data-idx="0" style="top:-6px;right:-8px;">1</div>
+        </div>
+
+        <!-- ② 성명 (여권 표기) -->
+        <div class="item-area" data-highlight="1" style="position:relative;margin-bottom:14px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;">
+              <div style="font-size:11px;color:#aaa;margin-bottom:4px;">First Name</div>
+              <div style="padding:10px 14px;border-bottom:1.5px solid #ccc;font-size:13px;color:#aaa;">여권 표기명</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:11px;color:#aaa;margin-bottom:4px;">Last Name</div>
+              <div style="padding:10px 14px;border-bottom:1.5px solid #ccc;font-size:13px;color:#aaa;">여권 표기명</div>
+            </div>
+          </div>
+          <div class="pin" data-idx="1" style="top:-6px;right:-8px;">2</div>
+        </div>
+
+        <!-- ③ 성별 -->
+        <div class="item-area" data-highlight="2" style="position:relative;margin-bottom:14px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="font-size:11px;color:#aaa;margin-bottom:4px;">성별</div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:12px;color:#666;text-align:center;">남</div>
+            <div style="flex:1;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:12px;color:#666;text-align:center;">여</div>
+          </div>
+          <div class="pin" data-idx="2" style="top:-6px;right:-8px;">3</div>
+        </div>
+
+        <!-- ④ 생년월일 -->
+        <div class="item-area" data-highlight="3" style="position:relative;margin-bottom:14px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="font-size:11px;color:#aaa;margin-bottom:4px;">생년월일</div>
+          <div style="display:flex;gap:6px;">
+            <div style="flex:1.2;padding:10px 12px;border-bottom:1.5px solid #ccc;font-size:12px;color:#aaa;text-align:center;">년 ▽</div>
+            <div style="flex:1;padding:10px 12px;border-bottom:1.5px solid #ccc;font-size:12px;color:#aaa;text-align:center;">월 ▽</div>
+            <div style="flex:1;padding:10px 12px;border-bottom:1.5px solid #ccc;font-size:12px;color:#aaa;text-align:center;">일 ▽</div>
+          </div>
+          <div class="pin" data-idx="3" style="top:-6px;right:-8px;">4</div>
+        </div>
+
+        <!-- ⑤ 직업 -->
+        <div class="item-area" data-highlight="4" style="position:relative;margin-bottom:14px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="font-size:11px;color:#aaa;margin-bottom:4px;">직업</div>
+          <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1.5px solid #ccc;">
+            <span style="font-size:13px;color:#aaa;">선택해 주세요</span>
+            <span style="margin-left:auto;font-size:12px;color:#bbb;">▽</span>
+          </div>
+          <div class="pin" data-idx="4" style="top:-6px;right:-8px;">5</div>
+        </div>
+
+        <!-- ⑥ 거래목적 -->
+        <div class="item-area" data-highlight="5" style="position:relative;margin-bottom:14px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="font-size:11px;color:#aaa;margin-bottom:4px;">거래목적</div>
+          <div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1.5px solid #ccc;">
+            <span style="font-size:13px;color:#aaa;">선택해 주세요</span>
+            <span style="margin-left:auto;font-size:12px;color:#bbb;">▽</span>
+          </div>
+          <div class="pin" data-idx="5" style="top:-6px;right:-8px;">6</div>
+        </div>
+
+        <!-- ⑦ 휴대폰번호 -->
+        <div class="item-area" data-highlight="6" style="position:relative;margin-bottom:14px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="font-size:11px;color:#aaa;margin-bottom:4px;">휴대폰번호</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="padding:10px 12px;border-bottom:1.5px solid #ccc;font-size:12px;color:#555;font-weight:500;white-space:nowrap;">🇸🇬 +65</div>
+            <div style="flex:1;padding:10px 14px;border-bottom:1.5px solid #ccc;font-size:13px;color:#aaa;">XXXX-XXXX</div>
+          </div>
+          <div class="pin" data-idx="6" style="top:-6px;right:-8px;">7</div>
+        </div>
+
+        <!-- ⑧ 거주지 주소 (구글 API) -->
+        <div class="item-area" data-highlight="7" style="position:relative;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="font-size:11px;color:#aaa;margin-bottom:4px;">거주지 주소</div>
+          <div style="display:flex;gap:8px;align-items:stretch;margin-bottom:8px;">
+            <div style="flex:1;padding:10px 14px;border-bottom:1.5px solid #ccc;font-size:13px;color:#aaa;">주소 검색 (Google)</div>
+            <div style="padding:10px 14px;background:#e8e8e8;border-radius:6px;font-size:11px;color:#888;font-weight:600;white-space:nowrap;display:flex;align-items:center;">🔍</div>
+          </div>
+          <div style="padding:10px 14px;border-bottom:1.5px solid #ccc;font-size:13px;color:#aaa;margin-bottom:6px;">상세 주소 1</div>
+          <div style="padding:10px 14px;border-bottom:1.5px solid #ccc;font-size:13px;color:#aaa;margin-bottom:6px;">상세 주소 2</div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;padding:10px 14px;border-bottom:1.5px solid #ccc;font-size:13px;color:#aaa;">도시</div>
+            <div style="flex:1;padding:10px 14px;border-bottom:1.5px solid #ccc;font-size:13px;color:#aaa;">우편번호</div>
+          </div>
+          <div class="pin" data-idx="7" style="top:-6px;right:-8px;">8</div>
+        </div>
+
+      </div>
+
+      <!-- 하단 버튼 영역 -->
+      <div class="zone" id="z2" data-idx="8">
+        <div class="zone-highlight"></div>
+        <div style="padding:14px;border-radius:8px;border:1.5px solid #ccc;color:#aaa;text-align:center;font-size:14px;font-weight:700;position:relative;">
+          다음
+          <div class="pin" data-idx="8" style="top:-8px;right:-8px;">9</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <svg id="connSvg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;overflow:visible;"></svg>
+
+  <div class="items" id="items">
+
+    <div class="itm" data-idx="0">
+      <div class="num">1</div>
+      <div>
+        <div class="itm-title">국적</div>
+        <div class="itm-desc">
+          · 이전 화면에서 선택한 국가가 디폴트 (예: 싱가포르)<br>
+          · 드롭다운으로 변경 가능 (▽ 화살표)<br>
+          · 일본 선택 불가 — 일본 거주자는 REG-IND-004로 분기됨<br>
+          · 국적 변경 시 국가코드(⑦), 주소 형식(⑧) 자동 갱신<br>
+          · 필수 선택
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="1">
+      <div class="num">2</div>
+      <div>
+        <div class="itm-title">성명 (여권 표기)</div>
+        <div class="itm-desc">
+          · 빈 값이 디폴트<br>
+          · First Name / Last Name 분리 입력<br>
+          · 영문 대소문자만 입력 가능<br>
+          · 여권에 기재된 이름과 동일하게 입력 안내<br>
+          · 한자/카타카나 입력 필드 없음 (일본 전용 필드 제외)<br>
+          · 필수 입력
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="2">
+      <div class="num">3</div>
+      <div>
+        <div class="itm-title">성별</div>
+        <div class="itm-desc">
+          · 미선택이 디폴트<br>
+          · 남/여 중 1개만 선택 (라디오 방식)<br>
+          · 선택 시 파란 테두리 + 파란 텍스트<br>
+          · 필수 선택
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="3">
+      <div class="num">4</div>
+      <div>
+        <div class="itm-title">생년월일</div>
+        <div class="itm-desc">
+          · 미선택이 디폴트<br>
+          · 년/월/일 각각 드롭다운 선택<br>
+          · 만 18세 미만 선택 불가: <strong style="color:#e53935;">"만 18세 이상만 가입 가능합니다"</strong><br>
+          · 필수 선택
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="4">
+      <div class="num">5</div>
+      <div>
+        <div class="itm-title">직업</div>
+        <div class="itm-desc">
+          · "선택해 주세요"가 디폴트<br>
+          · 드롭다운 선택 (우측 ▽ 화살표)<br>
+          · 선택지: 회사원, 자영업, 공무원, 전문직, 학생, 주부, 무직, 기타<br>
+          · "기타" 선택 시 직접 입력 필드 노출<br>
+          · 필수 선택
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="5">
+      <div class="num">6</div>
+      <div>
+        <div class="itm-title">거래목적</div>
+        <div class="itm-desc">
+          · "선택해 주세요"가 디폴트<br>
+          · 드롭다운 선택 (우측 ▽ 화살표)<br>
+          · 선택지: 투자, 자산운용, 사업자금, 기타<br>
+          · "기타" 선택 시 직접 입력 필드 노출<br>
+          · 해외 거주자 전용 필드 (일본 거주자 화면에는 없음)<br>
+          · 필수 선택
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="6">
+      <div class="num">7</div>
+      <div>
+        <div class="itm-title">휴대폰번호</div>
+        <div class="itm-desc">
+          · 빈 값이 디폴트<br>
+          · 국가코드는 ① 국적에 연동하여 자동 표시 (예: +65)<br>
+          · 숫자만 입력 가능<br>
+          · 국가별 전화번호 형식 유효성 체크<br>
+          · 형식 미충족 시: <strong style="color:#e53935;">"유효한 휴대폰번호를 입력해 주세요"</strong><br>
+          · 필수 입력
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="7">
+      <div class="num">8</div>
+      <div>
+        <div class="itm-title">거주지 주소 (Google API)</div>
+        <div class="itm-desc">
+          · 빈 값이 디폴트<br>
+          · Google Places API 연동 — 검색창에 주소 입력 시 자동완성 드롭다운<br>
+          · 자동완성 선택 시 상세주소1, 도시, 우편번호 자동 입력<br>
+          · 상세주소2: 직접 입력 (아파트호수, 건물명 등)<br>
+          · 자동완성 미사용 시 모든 필드 직접 입력 가능<br>
+          · 일본 거주자의 우편번호 검색 방식과 다름 (구글 API 기반)<br>
+          · 필수 입력 (상세주소2 제외)
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="8">
+      <div class="num">9</div>
+      <div>
+        <div class="itm-title">다음 버튼</div>
+        <div class="itm-desc">
+          · 비활성이 디폴트 (회색 테두리 + 회색 글씨)<br>
+          · ①~⑧ 모든 필수 항목 입력 완료 시 활성화 (파란 배경 + 흰 글씨)<br>
+          · 클릭 시 입력 데이터 유효성 검증 후 본인확인 여권(REG-IND-010)으로 이동<br>
+          · 유효성 미충족 시 해당 필드에 에러 메시지 표시, 화면 이동 없음
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 오른쪽: 상세내용 -->
+  <div class="detail-col" id="detailCol">
+    <div class="dtl" data-idx="0"></div>
+    <div class="dtl" data-idx="1"></div>
+    <div class="dtl" data-idx="2"></div>
+    <div class="dtl" data-idx="3"></div>
+    <div class="dtl" data-idx="4">
+      <div class="detail-label">직업 선택지</div>
+      <div class="dtl-body">회사원 / 자영업 / 공무원 / 전문직 / 학생 / 주부 / 무직 / 기타<br>· "기타" 선택 시 직접 입력 필드 노출</div>
+    </div>
+    <div class="dtl" data-idx="5">
+      <div class="detail-label">거래목적 선택지</div>
+      <div class="dtl-body">투자 / 자산운용 / 사업자금 / 기타<br>· "기타" 선택 시 직접 입력 필드 노출</div>
+    </div>
+    <div class="dtl" data-idx="6"></div>
+    <div class="dtl" data-idx="7"></div>
+    <div class="dtl" data-idx="8">
+      <div class="detail-label">선택에 따른 분기</div>
+      <div class="dtl-body">
+        <div style="font-size:11.5px;color:#555;line-height:2;padding:10px 12px;background:#f7f7f5;border-radius:8px;">
+          · 다음 화면: 본인확인 여권(REG-IND-010)<br>
+          · 뒤로가기 → 이전 화면으로 복귀 (입력 데이터 유지)
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<section class="footer-note">
+  <div class="note-card">
+    <div class="note-title">비고</div>
+    <div class="note-body">
+      · 이 화면은 해외 거주 개인 사용자의 고객정보입력 화면입니다.<br>
+      · REG-IND-004(일본)와의 차이점:<br>
+      &nbsp;&nbsp;- 한자/카타카나 성명 필드 없음 (여권 표기 영문명만)<br>
+      &nbsp;&nbsp;- 거래목적 필드 추가<br>
+      &nbsp;&nbsp;- 주소 입력이 Google Places API 기반<br>
+      &nbsp;&nbsp;- 국가코드가 국적에 따라 동적 변경<br>
+      · 스텝바: 고객정보입력(현재, 파란 ●) → 본인확인(미완료, 회색 ○)
+    </div>
+  </div>
+</section>
+
+<script>
+function drawBrackets() {
+  const zones = [document.getElementById('z0'), document.getElementById('z1'), document.getElementById('z2')];
+  const labels = document.querySelectorAll('.lbl');
+  const svg = document.getElementById('bracketSvg');
+  if (!zones.length || !labels.length) return;
+  let totalH = 0;
+  zones.forEach((z, i) => {
+    const h = z.offsetHeight;
+    if (labels[i]) labels[i].style.height = h + 'px';
+    totalH += h;
+  });
+  svg.setAttribute('height', totalH);
+  svg.innerHTML = '';
+  let y = 0;
+  zones.forEach((z) => {
+    const h = z.offsetHeight;
+    const top = y + 6, bot = y + h - 6, x = 4;
+    const mk = (tag, attrs) => {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
+      return el;
+    };
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x+8,y2:top,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:bot,x2:x+8,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    y += h;
+  });
+}
+function drawConnectors() {
+  const svg = document.getElementById('connSvg');
+  const main = document.querySelector('.main');
+  if (!svg || !main) return;
+  svg.innerHTML = '';
+  const mRect = main.getBoundingClientRect();
+  document.querySelectorAll('.pin').forEach(pin => {
+    const idx = pin.dataset.idx;
+    const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+    if (!itm) return;
+    const pRect = pin.getBoundingClientRect();
+    const iRect = itm.querySelector('.num').getBoundingClientRect();
+    const x1 = pRect.right - mRect.left + 4;
+    const y1 = pRect.top + pRect.height/2 - mRect.top;
+    const x2 = iRect.left - mRect.left - 4;
+    const y2 = iRect.top + iRect.height/2 - mRect.top;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    line.setAttribute('stroke', '#ccc'); line.setAttribute('stroke-width', '1');
+    line.setAttribute('stroke-dasharray', '4,3'); line.setAttribute('data-idx', idx);
+    svg.appendChild(line);
+  });
+}
+let activeIdx = null;
+function selectItem(idx) {
+  if (activeIdx === idx) { clearSelection(); return; }
+  clearSelection(); activeIdx = idx;
+  const pin = document.querySelector(`.pin[data-idx="${idx}"]`);
+  if (pin) pin.classList.add('active');
+  const area = document.querySelector(`.item-area[data-highlight="${idx}"]`);
+  if (area) area.style.borderColor = '#2563eb';
+  document.querySelectorAll('.zone').forEach(z => {
+    const zoneIdxList = (z.dataset.idx || '').split(',');
+    if (zoneIdxList.length === 1 && zoneIdxList.includes(idx)) z.classList.add('active');
+  });
+  const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+  if (itm) itm.classList.add('active');
+  const dtl = document.querySelector(`.dtl[data-idx="${idx}"]`);
+  if (dtl) dtl.classList.add('active');
+  const line = document.querySelector(`#connSvg line[data-idx="${idx}"]`);
+  if (line) { line.setAttribute('stroke', '#2563eb'); line.setAttribute('stroke-width', '1.5'); }
+}
+function clearSelection() {
+  activeIdx = null;
+  document.querySelectorAll('.pin.active').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.zone.active').forEach(z => z.classList.remove('active'));
+  document.querySelectorAll('.itm.active').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.dtl.active').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.item-area').forEach(a => a.style.borderColor = 'transparent');
+  document.querySelectorAll('#connSvg line').forEach(l => { l.setAttribute('stroke','#ccc'); l.setAttribute('stroke-width','1'); });
+}
+document.addEventListener('click', (e) => {
+  const pin = e.target.closest('.pin');
+  const itm = e.target.closest('.itm');
+  const dtl = e.target.closest('.dtl');
+  if (pin) { selectItem(pin.dataset.idx); return; }
+  if (itm && itm.dataset.idx !== undefined) { selectItem(itm.dataset.idx); return; }
+  if (dtl && dtl.dataset.idx !== undefined) { selectItem(dtl.dataset.idx); return; }
+  if (!e.target.closest('.zone') && !e.target.closest('.itm') && !e.target.closest('.dtl')) clearSelection();
+});
+window.addEventListener('load', () => { drawBrackets(); drawConnectors(); });
+window.addEventListener('resize', () => { drawBrackets(); drawConnectors(); });
+</script>
+
+<script>(function(){function r(){var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight);window.parent&&window.parent.postMessage({type:"iframeHeight",h:h},"*");}if(document.readyState==="complete"){r();setTimeout(r,400);setTimeout(r,1200);}else{window.addEventListener("load",function(){r();setTimeout(r,400);setTimeout(r,1200);});}})();</script>
+</body>
+</html>

@@ -1,0 +1,293 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>화면기획서 v2 — PIN 인증 안내 (거래소 홈 배너)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --surface: #fff;
+    --border: #ddd;
+    --text: #1a1a1a;
+    --text-sub: #888;
+    --accent: #2563eb;
+    --font: 'Noto Sans KR', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); }
+
+  .header {
+    background:var(--surface);
+    padding:20px 32px;
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+  }
+  .crumb { font-size:12px; color:#aaa; font-weight:600; }
+  .crumb .s { margin:0 6px; }
+  .title { font-size:24px; font-weight:800; }
+  .sid { font-size:11px; color:var(--accent); background:#e8eefb; padding:3px 8px; border-radius:4px; font-weight:600; font-family:monospace; }
+
+  .main { display:flex; padding:20px 32px 0; gap:32px; align-items:flex-start; position:relative; }
+  .screen-panel { display:flex; gap:0; flex-shrink:0; }
+  .labels { display:flex; flex-direction:column; width:70px; flex-shrink:0; }
+  .lbl { flex:none; display:flex; align-items:center; justify-content:flex-end; position:relative; }
+  .lbl-text { font-size:12px; font-weight:600; color:#888; text-align:right; padding-right:12px; line-height:1.3; }
+
+  .frame { width:320px; background:var(--surface); border:1px solid #ccc; border-radius:12px; overflow:visible; flex-shrink:0; position:relative; }
+  .zone { padding:20px; border-bottom:1px dashed #e0e0e0; position:relative; }
+  .zone:last-child { border-bottom:none; }
+
+  .pin {
+    position:absolute; width:22px; height:22px; border-radius:50%;
+    background:#e0e0e0; color:#888; font-size:11px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:5; transition: all .2s; user-select:none;
+  }
+  .pin:hover { background:#ccc; }
+  .pin.active { background:var(--accent); color:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.2); }
+
+  .zone-highlight { display:none; position:absolute; inset:4px; border:2px solid var(--accent); border-radius:8px; pointer-events:none; z-index:4; }
+  .zone.active .zone-highlight { display:block; }
+
+  .items { flex:1; min-width:220px; max-width:320px; }
+  .itm > div:nth-child(2) { flex:1; min-width:0; }
+  .itm {
+    display:flex; gap:12px; padding:14px 0; border-bottom:1px solid #eee;
+    align-items:flex-start; border-radius:6px; transition: background .2s;
+    margin:0 -8px; padding-left:8px; padding-right:8px;
+  }
+  .itm:last-child { border-bottom:none; }
+  .itm.active { background:#e8eefb; }
+  .num {
+    width:24px; height:24px; border-radius:50%;
+    background:#e0e0e0; color:#888; font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1px; transition: all .2s;
+  }
+  .itm.active .num { background:var(--accent); color:#fff; }
+  .itm-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+  .itm-desc { font-size:12px; color:#777; line-height:1.5; }
+
+  /* === 오른쪽: 상세내용 컬럼 === */
+  .detail-col { flex:1; min-width:260px; max-width:400px; }
+  .dtl { padding:14px 0 14px 20px; border-bottom:1px solid #eee; border-left:2px solid #e8eefb; min-height:53px; transition:border-left-color .2s, background .2s; }
+  .dtl:last-child { border-bottom:none; }
+  .dtl.active { border-left-color:#2563eb; background:#f5f8ff; border-radius:0 6px 6px 0; }
+  .detail-label { font-size:10px; font-weight:700; color:#b0b0b0; letter-spacing:0.07em; text-transform:uppercase; margin-bottom:6px; }
+  .dtl-body { font-size:12px; color:#666; line-height:1.5; }
+
+  .footer-note { padding:20px 32px 0; }
+  .note-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; }
+  .note-title { font-size:14px; font-weight:700; margin-bottom:12px; padding-left:12px; border-left:3px solid var(--accent); }
+  .note-body { font-size:12px; color:#777; line-height:1.7; }
+  ::-webkit-scrollbar{display:none !important;} *{scrollbar-width:none !important;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="crumb"><span>PIN인증</span><span class="s">›</span><span>거래소 홈 배너</span></div>
+  <h1 class="title">PIN 인증 안내 (거래소 홈 배너)</h1>
+  <span class="sid">SCR-PIN-001</span>
+</header>
+
+<div class="main">
+
+  <div class="screen-panel">
+    <div style="position:relative;display:flex;">
+      <div class="labels" id="labels">
+        <div class="lbl"><span class="lbl-text">배너 영역</span></div>
+        <div class="lbl"><span class="lbl-text">거래소 홈<br>콘텐츠</span></div>
+      </div>
+      <svg id="bracketSvg" width="24" style="flex-shrink:0;overflow:visible;"></svg>
+    </div>
+
+    <div class="frame" id="frame">
+
+      <!-- 배너 영역 -->
+      <div class="zone" id="z0" data-idx="0">
+        <div class="zone-highlight"></div>
+        <div class="item-area" data-highlight="0" style="position:relative;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="padding:14px 16px;background:#fef3c7;border-radius:8px;border:1px solid #fcd34d;">
+            <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:6px;">핀번호를 입력해 주세요</div>
+            <div style="font-size:11px;color:#a16207;line-height:1.6;">수령한 서류에 적혀있는 핀번호 4자리 입력 후, 거래가 가능합니다</div>
+            <div style="margin-top:10px;padding:8px 14px;background:#f59e0b;color:#fff;border-radius:6px;font-size:12px;font-weight:700;text-align:center;cursor:pointer;">PIN 입력하기</div>
+          </div>
+          <div class="pin" data-idx="0" style="top:-6px;right:-8px;">1</div>
+        </div>
+      </div>
+
+      <!-- 거래소 홈 콘텐츠 (플레이스홀더) -->
+      <div class="zone" id="z1" data-idx="1">
+        <div class="zone-highlight"></div>
+        <div class="item-area" data-highlight="1" style="position:relative;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="padding:40px 20px;text-align:center;background:#f9f9f7;border-radius:8px;border:1px dashed #ddd;">
+            <div style="font-size:14px;color:#bbb;font-weight:600;">거래소 홈</div>
+            <div style="font-size:11px;color:#ccc;margin-top:4px;">종목 리스트, 종목심사 등</div>
+            <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
+              <div style="width:60px;height:40px;background:#eee;border-radius:4px;"></div>
+              <div style="width:60px;height:40px;background:#eee;border-radius:4px;"></div>
+              <div style="width:60px;height:40px;background:#eee;border-radius:4px;"></div>
+            </div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+              <div style="height:12px;background:#eee;border-radius:2px;width:80%;margin:0 auto;"></div>
+              <div style="height:12px;background:#eee;border-radius:2px;width:60%;margin:0 auto;"></div>
+            </div>
+          </div>
+          <div class="pin" data-idx="1" style="top:-6px;right:-8px;">2</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <svg id="connSvg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z:10;overflow:visible;"></svg>
+
+  <div class="items" id="items">
+
+    <div class="itm" data-idx="0">
+      <div class="num">1</div>
+      <div>
+        <div class="itm-title">PIN 안내 배너</div>
+        <div class="itm-desc">
+          · 노란색 배너가 거래소 홈 상단에 노출<br>
+          · PIN 우편엽서 수령 대기 중인 사용자에게만 표시<br>
+          · "핀번호를 입력해 주세요" + "수령한 서류에 적혀있는 핀번호 4자리 입력 후, 거래가 가능합니다" 안내<br>
+          · "PIN 입력하기" 버튼 클릭 → PIN 번호 입력 화면(SCR-PIN-002)으로 이동<br>
+          · PIN 인증 완료 시 배너 자동 숨김<br>
+          · 배너가 노출된 상태에서도 거래소 홈의 종목 탐색은 가능 (거래만 제한)
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="1">
+      <div class="num">2</div>
+      <div>
+        <div class="itm-title">거래소 홈 콘텐츠</div>
+        <div class="itm-desc">
+          · 거래소 홈 화면의 기본 콘텐츠 (종목 리스트, 종목심사 등)<br>
+          · PIN 미인증 상태에서도 종목 탐색, 종목 상세 조회는 가능<br>
+          · 주문(매수/매도) 시도 시: <strong style="color:#e53935;">"PIN 인증이 필요합니다"</strong> 팝업 + PIN 입력 화면 이동 유도<br>
+          · 이 영역의 상세 구성은 거래소 홈 화면기획서 참고
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- 오른쪽: 상세내용 -->
+  <div class="detail-col" id="detailCol">
+    <div class="dtl" data-idx="0"></div>
+    <div class="dtl" data-idx="1">
+      <div class="detail-label">선택에 따른 분기</div>
+      <div class="dtl-body">
+        <div style="font-size:11.5px;color:#555;line-height:2;padding:10px 12px;background:#f7f7f5;border-radius:8px;">
+          · 다음 화면: PIN 번호 입력 (SCR-PIN-002)
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<section class="footer-note">
+  <div class="note-card">
+    <div class="note-title">비고</div>
+    <div class="note-body">
+      · 이 화면은 거래소 홈 화면에 PIN 입력 안내 배너가 노출된 상태를 보여줍니다.<br>
+      · PIN 우편엽서 대상자: 일본법인, 해외개인 사용자<br>
+      · PIN 인증 전까지 거래(주문)가 제한되며, 종목 탐색은 가능합니다.
+    </div>
+  </div>
+</section>
+
+<script>
+function drawBrackets() {
+  const zones = [document.getElementById('z0'), document.getElementById('z1')];
+  const labels = document.querySelectorAll('.lbl');
+  const svg = document.getElementById('bracketSvg');
+  if (!zones.length || !labels.length) return;
+  let totalH = 0;
+  zones.forEach((z, i) => { const h = z.offsetHeight; if (labels[i]) labels[i].style.height = h + 'px'; totalH += h; });
+  svg.setAttribute('height', totalH);
+  svg.innerHTML = '';
+  let y = 0;
+  zones.forEach((z) => {
+    const h = z.offsetHeight;
+    const top = y + 6, bot = y + h - 6, x = 4;
+    const mk = (tag, attrs) => { const el = document.createElementNS('http://www.w3.org/2000/svg', tag); Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v)); return el; };
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x+8,y2:top,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:bot,x2:x+8,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    y += h;
+  });
+}
+function drawConnectors() {
+  const svg = document.getElementById('connSvg');
+  const main = document.querySelector('.main');
+  if (!svg || !main) return;
+  svg.innerHTML = '';
+  const mRect = main.getBoundingClientRect();
+  document.querySelectorAll('.pin').forEach(pin => {
+    const idx = pin.dataset.idx;
+    const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+    if (!itm) return;
+    const pRect = pin.getBoundingClientRect();
+    const iRect = itm.querySelector('.num').getBoundingClientRect();
+    const x1 = pRect.right - mRect.left + 4;
+    const y1 = pRect.top + pRect.height/2 - mRect.top;
+    const x2 = iRect.left - mRect.left - 4;
+    const y2 = iRect.top + iRect.height/2 - mRect.top;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    line.setAttribute('stroke', '#ccc'); line.setAttribute('stroke-width', '1');
+    line.setAttribute('stroke-dasharray', '4,3'); line.setAttribute('data-idx', idx);
+    svg.appendChild(line);
+  });
+}
+let activeIdx = null;
+function selectItem(idx) {
+  if (activeIdx === idx) { clearSelection(); return; }
+  clearSelection(); activeIdx = idx;
+  const pin = document.querySelector(`.pin[data-idx="${idx}"]`);
+  if (pin) pin.classList.add('active');
+  const area = document.querySelector(`.item-area[data-highlight="${idx}"]`);
+  if (area) area.style.borderColor = '#2563eb';
+  document.querySelectorAll('.zone').forEach(z => {
+    const zoneIdxList = (z.dataset.idx || '').split(',');
+    if (zoneIdxList.length === 1 && zoneIdxList.includes(idx)) z.classList.add('active');
+  });
+  const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+  if (itm) itm.classList.add('active');
+  const dtl = document.querySelector(`.dtl[data-idx="${idx}"]`);
+  if (dtl) dtl.classList.add('active');
+  const line = document.querySelector(`#connSvg line[data-idx="${idx}"]`);
+  if (line) { line.setAttribute('stroke', '#2563eb'); line.setAttribute('stroke-width', '1.5'); }
+}
+function clearSelection() {
+  activeIdx = null;
+  document.querySelectorAll('.pin.active').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.zone.active').forEach(z => z.classList.remove('active'));
+  document.querySelectorAll('.itm.active').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.dtl.active').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.item-area').forEach(a => a.style.borderColor = 'transparent');
+  document.querySelectorAll('#connSvg line').forEach(l => { l.setAttribute('stroke','#ccc'); l.setAttribute('stroke-width','1'); });
+}
+document.addEventListener('click', (e) => {
+  const pin = e.target.closest('.pin');
+  const itm = e.target.closest('.itm');
+  const dtl = e.target.closest('.dtl');
+  if (pin) { selectItem(pin.dataset.idx); return; }
+  if (itm && itm.dataset.idx !== undefined) { selectItem(itm.dataset.idx); return; }
+  if (dtl && dtl.dataset.idx !== undefined) { selectItem(dtl.dataset.idx); return; }
+  if (!e.target.closest('.zone') && !e.target.closest('.itm') && !e.target.closest('.dtl')) clearSelection();
+});
+window.addEventListener('load', () => { drawBrackets(); drawConnectors(); });
+window.addEventListener('resize', () => { drawBrackets(); drawConnectors(); });
+</script>
+
+<script>(function(){function r(){var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight);window.parent&&window.parent.postMessage({type:"iframeHeight",h:h},"*");}if(document.readyState==="complete"){r();setTimeout(r,400);setTimeout(r,1200);}else{window.addEventListener("load",function(){r();setTimeout(r,400);setTimeout(r,1200);});}})();</script>
+</body>
+</html>

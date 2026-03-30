@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>화면기획서 v2 — 프로토타입</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --surface: #fff;
+    --border: #ddd;
+    --text: #1a1a1a;
+    --text-sub: #888;
+    --accent: #2563eb;
+    --font: 'Noto Sans KR', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); }
+
+  /* 헤더 */
+  .header {
+    background:var(--surface);
+    padding:20px 32px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .crumb { font-size:12px; color:#aaa; font-weight:600; }
+  .crumb .s { margin:0 6px; }
+  .title { font-size:24px; font-weight:800; }
+  .sid { font-size:11px; color:var(--accent); background:#e8eefb; padding:3px 8px; border-radius:4px; font-weight:600; font-family:monospace; }
+
+  /* 메인 레이아웃 */
+  .main {
+    display:flex;
+    padding:20px 32px 0;
+    gap:32px;
+    align-items:flex-start;
+    position:relative;
+  }
+
+  /* === 왼쪽: 영역라벨 + 화면 === */
+  .screen-panel {
+    display:flex;
+    gap:0;
+    flex-shrink:0;
+  }
+
+  /* 영역 라벨 (화면 왼쪽) */
+  .labels {
+    display:flex;
+    flex-direction:column;
+    width:70px;
+    flex-shrink:0;
+  }
+  .lbl {
+    flex:none;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    position:relative;
+  }
+  .lbl-text {
+    font-size:12px;
+    font-weight:600;
+    color:#888;
+    text-align:right;
+    padding-right:12px;
+    line-height:1.3;
+  }
+  /* 세로 범위선 + 가로 연결선 (SVG로 그림) */
+
+  /* 화면 프레임 */
+  .frame {
+    width:320px;
+    background:var(--surface);
+    border:1px solid #ccc;
+    border-radius:12px;
+    overflow:visible;
+    flex-shrink:0;
+    position:relative;
+  }
+  .zone {
+    padding:20px;
+    border-bottom:1px dashed #e0e0e0;
+    position:relative;
+  }
+  .zone:last-child { border-bottom:none; }
+
+  /* 화면 안 번호 마커 */
+  .pin {
+    position:absolute;
+    width:22px; height:22px; border-radius:50%;
+    background:#e0e0e0; color:#888;
+    font-size:11px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    z-index:5;
+    transition: all .2s;
+    user-select:none;
+  }
+  .pin:hover { background:#ccc; }
+  .pin.active { background:var(--accent); color:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.2); }
+
+  /* 클릭 시 영역 하이라이트 */
+  .zone-highlight {
+    display:none;
+    position:absolute;
+    inset:4px;
+    border:2px solid var(--accent);
+    border-radius:8px;
+    pointer-events:none;
+    z-index:4;
+  }
+  .zone.active .zone-highlight { display:block; }
+
+  /* 연결선 SVG */
+  #connSvg {
+    position:absolute;
+    top:0; left:0;
+    pointer-events:none;
+    z-index:3;
+    overflow:visible;
+  }
+
+  /* === 오른쪽: 항목설명 === */
+  .items {
+    flex:1;
+    max-width:380px;
+  }
+  .itm {
+    display:flex;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid #eee;
+    align-items:flex-start;
+    border-radius:6px;
+    transition: background .2s;
+    margin:0 -8px;
+    padding-left:8px;
+    padding-right:8px;
+  }
+  .itm:last-child { border-bottom:none; }
+  .itm.active { background:#e8eefb; }
+  .num {
+    width:24px; height:24px; border-radius:50%;
+    background:#e0e0e0; color:#888; font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1px;
+    transition: all .2s;
+  }
+  .itm.active .num { background:var(--accent); color:#fff; }
+  .itm-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+  .itm-desc { font-size:12px; color:#777; line-height:1.5; }
+  .itm-note { font-size:11px; color:#aaa; margin-top:4px; font-style:italic; }
+
+  /* 피쉬본 */
+  .fishbone-wrap {
+    padding:0 32px 0;
+  }
+  .fishbone-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:28px;
+  }
+  .fb-title {
+    font-size:14px; font-weight:700; margin-bottom:20px;
+    padding-left:12px;
+    border-left:3px solid var(--accent);
+  }
+  .fb-svg { overflow-x:auto; }
+  .result-link { cursor:pointer; text-decoration:none; }
+  .result-link:hover rect { fill:#e8eefb; stroke:var(--accent); }
+  .result-link:hover text { fill:var(--accent); }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
+<style>img.emoji{height:1em;width:1em;margin:0 .1em;vertical-align:-0.1em;}</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="crumb"><span>가입</span><span class="s">›</span><span>유저타입선택</span></div>
+  <h1 class="title">유저 타입 선택</h1>
+  <span class="sid">SCR-REG-001</span>
+</header>
+
+<div class="main">
+
+  <!-- 왼쪽: 영역라벨 + 화면 -->
+  <div class="screen-panel">
+
+    <!-- 라벨 + 범위선 (SVG overlay) -->
+    <div style="position:relative;display:flex;">
+
+      <div class="labels" id="labels">
+        <div class="lbl"><span class="lbl-text">공통 질문</span></div>
+        <div class="lbl"><span class="lbl-text">개인 질문</span></div>
+        <div class="lbl"><span class="lbl-text">법인 질문</span></div>
+        <div class="lbl"><span class="lbl-text">하단 버튼<br><span style="display:inline-block;padding:1px 6px;border-radius:3px;background:#eee;color:#888;font-size:10px;font-weight:700;margin-top:2px;">고정</span> 영역</span></div>
+      </div>
+
+      <!-- SVG: 범위선을 JS로 정확히 그림 -->
+      <svg id="bracketSvg" width="24" style="flex-shrink:0;overflow:visible;"></svg>
+
+    </div>
+
+    <!-- 화면 프레임 -->
+    <div class="frame" id="frame">
+      <div class="zone" id="z0" data-idx="0">
+        <div class="zone-highlight"></div>
+        <div style="font-size:16px;font-weight:800;color:#222;margin-bottom:14px;">다음 중 선택해주세요</div>
+        <div style="display:flex;gap:10px;position:relative;">
+          <div style="flex:1;padding:12px;border-radius:26px;background:#5ba8f5;color:#fff;text-align:center;font-size:13px;font-weight:600;">개인입니다</div>
+          <div style="flex:1;padding:12px;border-radius:26px;border:1.5px solid #ccc;text-align:center;font-size:13px;color:#777;">법인입니다</div>
+          <div class="pin" data-idx="0" style="top:-8px;right:-8px;">1</div>
+        </div>
+      </div>
+      <!-- 개인 질문 영역 (조합여부 + 거주국가) -->
+      <div class="zone" id="z1" data-idx="1">
+        <div class="zone-highlight"></div>
+        <!-- ② 조합여부 -->
+        <div style="font-size:16px;font-weight:800;color:#222;margin-bottom:12px;">혹시, 투자조합이신가요?</div>
+        <div style="display:flex;gap:10px;position:relative;margin-bottom:20px;">
+          <div style="flex:1;padding:12px;border-radius:26px;border:1.5px solid #ccc;text-align:center;font-size:13px;color:#555;">네</div>
+          <div style="flex:1;padding:12px;border-radius:26px;border:1.5px solid #5ba8f5;text-align:center;color:#5ba8f5;font-size:13px;font-weight:500;">아니요</div>
+          <div class="pin" data-idx="1" style="top:-8px;right:-8px;">2</div>
+        </div>
+        <!-- ③ 거주국가 -->
+        <div style="font-size:16px;font-weight:800;color:#222;margin-bottom:12px;">현재 거주중인 국가를 선택해주세요</div>
+        <div style="padding:12px 14px;border:1.5px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;position:relative;">
+          <span style="font-size:13px;color:#333;">🇯🇵 일본</span>
+          <span style="margin-left:auto;color:#bbb;">▽</span>
+          <div class="pin" data-idx="2" style="top:-8px;right:-8px;">3</div>
+        </div>
+      </div>
+      <!-- 법인 질문 영역 (조합여부만) -->
+      <div class="zone" id="z2" data-idx="3">
+        <div class="zone-highlight"></div>
+        <div style="font-size:16px;font-weight:800;color:#222;margin-bottom:12px;">투자조합 명의로 거래하십니까?</div>
+        <div style="display:flex;gap:10px;position:relative;">
+          <div style="flex:1;padding:12px;border-radius:26px;border:1.5px solid #ccc;text-align:center;font-size:13px;color:#555;">네</div>
+          <div style="flex:1;padding:12px;border-radius:26px;border:1.5px solid #5ba8f5;text-align:center;color:#5ba8f5;font-size:13px;font-weight:500;">아니오</div>
+          <div class="pin" data-idx="3" style="top:-8px;right:-8px;">4</div>
+        </div>
+      </div>
+      <!-- 하단 버튼 영역 -->
+      <div class="zone" id="z3" data-idx="4">
+        <div class="zone-highlight"></div>
+        <div style="padding:14px;border-radius:8px;background:#5ba8f5;color:#fff;text-align:center;font-size:14px;font-weight:700;position:relative;">
+          다음
+          <div class="pin" data-idx="4" style="top:-8px;right:-8px;">5</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 연결선 SVG (메인 레벨) -->
+  <svg id="connSvg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;overflow:visible;"></svg>
+
+  <!-- 오른쪽: 항목설명 -->
+  <div class="items" id="items">
+    <div class="itm" data-idx="0">
+      <div class="num">1</div>
+      <div>
+        <div class="itm-title">유저 유형 선택</div>
+        <div class="itm-desc">
+          · 미선택이 디폴트, 1개만 선택<br>
+          · 개인 선택 시 → 개인 질문 영역 및 하단 버튼 영역 노출<br>
+          · 법인 선택 시 → 법인 질문 영역 및 하단 버튼 영역 노출<br>
+          · 선택 후 다른 선택지 변경 클릭 가능, 클릭 시 해당 영역 노출
+        </div>
+      </div>
+    </div>
+    <div class="itm" data-idx="1">
+      <div class="num">2</div>
+      <div>
+        <div class="itm-title">[개인] 조합 여부</div>
+        <div class="itm-desc">
+          · 미선택이 디폴트, 1개만 선택, 선택 후 변경 가능<br>
+          · ①에서 개인 선택 시 노출
+        </div>
+      </div>
+    </div>
+    <div class="itm" data-idx="2">
+      <div class="num">3</div>
+      <div>
+        <div class="itm-title">[개인] 거주국가 선택</div>
+        <div class="itm-desc">
+          · 일본이 디폴트 선택, 1개만 선택<br>
+          · ①에서 개인 선택 시 노출<br>
+          · 표시: 국기(flag) + 국가명(translations.jpn/kor)<br>
+          · 국가 데이터: ISO 3166-1 numeric(ccn3) 기준 <a href="https://github.com/mledoze/countries" target="_blank" style="color:#2563eb;font-size:11px;">[참조링크]</a>
+        </div>
+        <!-- 드롭다운 열린 상태 미니 와이어프레임 -->
+        <div style="margin-top:10px;border:1px solid #ddd;border-radius:8px;overflow:hidden;font-size:11px;max-width:200px;">
+          <div style="padding:7px 10px;border-bottom:1px solid #eee;background:#fafafa;display:flex;align-items:center;gap:6px;color:#aaa;">🔍 국가 검색</div>
+          <div style="padding:6px 10px;background:#e8eefb;display:flex;align-items:center;gap:6px;color:#333;font-weight:600;">🇯🇵 일본 <span style="margin-left:auto;color:#5ba8f5;font-size:10px;">✓</span></div>
+          <div style="padding:6px 10px;color:#333;">🇸🇬 싱가포르</div>
+          <div style="padding:6px 10px;color:#333;">🇨🇳 중국</div>
+          <div style="padding:6px 10px;color:#333;">🇰🇷 한국</div>
+          <div style="padding:6px 10px;color:#333;">🇭🇰 홍콩</div>
+          <div style="padding:6px 10px;color:#333;">🇹🇼 대만</div>
+          <div style="padding:6px 10px;color:#333;">🇦🇺 호주</div>
+          <div style="border-top:1px solid #ddd;margin:0 8px;"></div>
+          <div style="padding:6px 10px;color:#333;">🇬🇭 가나</div>
+          <div style="padding:6px 10px;color:#333;">🇬🇾 가이아나</div>
+          <div style="padding:5px 10px;color:#bbb;text-align:center;font-size:10px;">...</div>
+        </div>
+        <div style="margin-top:4px;font-size:10px;color:#aaa;">▲ 드롭다운 열린 상태</div>
+      </div>
+    </div>
+    <div class="itm" data-idx="3">
+      <div class="num">4</div>
+      <div>
+        <div class="itm-title">[법인] 조합 여부</div>
+        <div class="itm-desc">
+          · 미선택이 디폴트, 1개만 선택, 선택 후 변경 가능<br>
+          · ①에서 법인 선택 시 노출
+        </div>
+      </div>
+    </div>
+    <div class="itm" data-idx="4">
+      <div class="num">5</div>
+      <div>
+        <div class="itm-title">다음 버튼</div>
+        <div class="itm-desc">
+          · 비활성(회색)이 디폴트, 비활성시 클릭 불가<br>
+          · 개인: ①+②+③ 모두 선택 시 활성화(파란색)<br>
+          · 법인: ①+④ 모두 선택 시 활성화(파란색)<br>
+          · 클릭 시 상태분기 결과에 따라 다음 화면으로 이동(상태분기는 하단 참조)<br>
+          · 다음 화면: <a href="v2-SCR-REG-002.html" style="color:#2563eb;font-size:11px;">회원가입 (SCR-REG-002) →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 피쉬본 -->
+<section class="fishbone-wrap">
+  <div class="fishbone-card">
+    <div class="fb-title">선택에 따른 회원 상태 분기</div>
+    <div class="fb-svg">
+      <svg width="780" height="310" viewBox="0 0 780 310" style="font-family:var(--font);">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#bbb"/></marker>
+        </defs>
+
+        <!-- 결과 y좌표: 30, 75, 120, 165, 235, 280 (간격 45px 균일) -->
+
+        <!-- ① 유저유형 -->
+        <circle cx="40" cy="155" r="18" fill="#fff" stroke="#ccc" stroke-width="1.5"/>
+        <text x="40" y="155" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="#555">1</text>
+
+        <!-- 개인 분기 -->
+        <path d="M58,155 C85,155 85,97 110,97" stroke="#bbb" stroke-width="1.5" fill="none"/>
+        <text x="78" y="120" font-size="12" fill="#333" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">개인</text>
+
+        <!-- 법인 분기 -->
+        <path d="M58,155 C85,155 85,257 110,257" stroke="#bbb" stroke-width="1.5" fill="none"/>
+        <text x="78" y="210" font-size="12" fill="#333" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">법인</text>
+
+        <!-- ② 개인 조합여부 -->
+        <line x1="110" y1="97" x2="150" y2="97" stroke="#bbb" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <circle cx="172" cy="97" r="18" fill="#fff" stroke="#ccc" stroke-width="1.5"/>
+        <text x="172" y="97" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="#555">2</text>
+
+        <!-- 조합O → ③ -->
+        <path d="M190,97 C215,97 215,52 240,52" stroke="#bbb" stroke-width="1.5" fill="none"/>
+        <text x="210" y="66" font-size="12" fill="#333" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">조합O</text>
+        <line x1="240" y1="52" x2="280" y2="52" stroke="#bbb" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <circle cx="302" cy="52" r="18" fill="#fff" stroke="#ccc" stroke-width="1.5"/>
+        <text x="302" y="52" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="#555">3</text>
+
+        <!-- 조합O → 일본 → 결과1 (y=30) -->
+        <path d="M320,52 C342,52 342,30 360,30" stroke="#bbb" stroke-width="1.5" fill="none"/>
+        <text x="345" y="34" font-size="12" fill="#333" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">일본</text>
+        <line x1="360" y1="30" x2="430" y2="30" stroke="#bbb" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <a href="v2-SCR-REG-002.html" class="result-link"><rect x="438" y="14" width="200" height="30" rx="6" fill="#f5f5f0" stroke="#ccc" stroke-width="1"/><text x="528" y="30" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#555" font-weight="600">개인 * 조합 * 일본거주</text><text x="646" y="30" dominant-baseline="central" font-size="10" fill="#aaa">→</text></a>
+
+        <!-- 조합O → 일본외 → 결과2 (y=75) -->
+        <path d="M320,52 C342,52 342,75 360,75" stroke="#bbb" stroke-width="1.5" fill="none"/>
+        <text x="340" y="72" font-size="12" fill="#333" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">일본외</text>
+        <line x1="370" y1="75" x2="430" y2="75" stroke="#bbb" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <a href="v2-SCR-REG-002.html" class="result-link"><rect x="438" y="59" width="200" height="30" rx="6" fill="#f5f5f0" stroke="#ccc" stroke-width="1"/><text x="528" y="75" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#555" font-weight="600">개인 * 조합 * 일본외거주</text><text x="646" y="75" dominant-baseline="central" font-size="10" fill="#aaa">→</text></a>
+
+        <!-- 조합X → ③ -->
+        <path d="M190,97 C215,97 215,142 240,142" stroke="#bbb" stroke-width="1.5" fill="none"/>
+        <text x="210" y="128" font-size="12" fill="#333" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">조합X</text>
+        <line x1="240" y1="142" x2="280" y2="142" stroke="#bbb" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <circle cx="302" cy="142" r="18" fill="#fff" stroke="#ccc" stroke-width="1.5"/>
+        <text x="302" y="142" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="#555">3</text>
+
+        <!-- 조합X → 일본 → 결과3 (y=120) -->
+        <path d="M320,142 C342,142 342,120 360,120" stroke="#bbb" stroke-width="1.5" fill="none"/>
+        <text x="345" y="124" font-size="12" fill="#333" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">일본</text>
+        <line x1="360" y1="120" x2="430" y2="120" stroke="#bbb" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <a href="v2-SCR-REG-002.html" class="result-link"><rect x="438" y="104" width="200" height="30" rx="6" fill="#f5f5f0" stroke="#ccc" stroke-width="1"/><text x="528" y="120" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#555" font-weight="600">개인 * 일본거주</text><text x="646" y="120" dominant-baseline="central" font-size="10" fill="#aaa">→</text></a>
+
+        <!-- 조합X → 일본외 → 결과4 (y=165) -->
+        <path d="M320,142 C342,142 342,165 360,165" stroke="#bbb" stroke-width="1.5" fill="none"/>
+        <text x="340" y="163" font-size="12" fill="#333" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">일본외</text>
+        <line x1="370" y1="165" x2="430" y2="165" stroke="#bbb" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <a href="v2-SCR-REG-002.html" class="result-link"><rect x="438" y="149" width="200" height="30" rx="6" fill="#f5f5f0" stroke="#ccc" stroke-width="1"/><text x="528" y="165" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#555" font-weight="600">개인 * 일본외거주</text><text x="646" y="165" dominant-baseline="central" font-size="10" fill="#aaa">→</text></a>
+
+        <!-- ④ 법인 조합여부 -->
+        <line x1="110" y1="257" x2="150" y2="257" stroke="#bbb" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <circle cx="172" cy="257" r="18" fill="#fff" stroke="#ccc" stroke-width="1.5"/>
+        <text x="172" y="257" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="#555">4</text>
+
+        <!-- 법인 조합O → 결과5 (y=235) -->
+        <path d="M190,257 C215,257 215,235 240,235" stroke="#bbb" stroke-width="1.5" fill="none"/>
+        <text x="210" y="238" font-size="12" fill="#333" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">조합O</text>
+        <line x1="240" y1="235" x2="430" y2="235" stroke="#bbb" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <a href="v2-SCR-REG-002.html" class="result-link"><rect x="438" y="219" width="200" height="30" rx="6" fill="#f5f5f0" stroke="#ccc" stroke-width="1"/><text x="528" y="235" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#555" font-weight="600">법인 * 조합</text><text x="646" y="235" dominant-baseline="central" font-size="10" fill="#aaa">→</text></a>
+
+        <!-- 법인 조합X → 결과6 (y=280) -->
+        <path d="M190,257 C215,257 215,280 240,280" stroke="#bbb" stroke-width="1.5" fill="none"/>
+        <text x="210" y="278" font-size="12" fill="#333" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">조합X</text>
+        <line x1="240" y1="280" x2="430" y2="280" stroke="#bbb" stroke-width="1.5" marker-end="url(#arrow)"/>
+        <a href="v2-SCR-REG-002.html" class="result-link"><rect x="438" y="264" width="200" height="30" rx="6" fill="#f5f5f0" stroke="#ccc" stroke-width="1"/><text x="528" y="280" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#555" font-weight="600">법인</text><text x="646" y="280" dominant-baseline="central" font-size="10" fill="#aaa">→</text></a>
+
+      </svg>
+    </div>
+  </div>
+</section>
+
+<script>
+// ── 영역 브래킷 그리기 ──
+function drawBrackets() {
+  const zones = document.querySelectorAll('.zone');
+  const labels = document.querySelectorAll('.lbl');
+  const svg = document.getElementById('bracketSvg');
+  if (!zones.length || !labels.length) return;
+
+  let totalH = 0;
+  zones.forEach((z, i) => {
+    const h = z.offsetHeight;
+    if (labels[i]) labels[i].style.height = h + 'px';
+    totalH += h;
+  });
+
+  svg.setAttribute('height', totalH);
+  svg.innerHTML = '';
+
+  let y = 0;
+  zones.forEach((z) => {
+    const h = z.offsetHeight;
+    const top = y + 6, bot = y + h - 6, x = 4;
+
+    const mk = (tag, attrs) => {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
+      return el;
+    };
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x+8,y2:top,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:bot,x2:x+8,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    y += h;
+  });
+}
+
+// ── 연결선 그리기 ──
+function drawConnectors() {
+  const svg = document.getElementById('connSvg');
+  const main = document.querySelector('.main');
+  if (!svg || !main) return;
+
+  svg.innerHTML = '';
+  const mRect = main.getBoundingClientRect();
+
+  document.querySelectorAll('.pin').forEach(pin => {
+    const idx = pin.dataset.idx;
+    const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+    if (!itm) return;
+
+    const pRect = pin.getBoundingClientRect();
+    const iRect = itm.querySelector('.num').getBoundingClientRect();
+
+    const x1 = pRect.right - mRect.left + 4;
+    const y1 = pRect.top + pRect.height/2 - mRect.top;
+    const x2 = iRect.left - mRect.left - 4;
+    const y2 = iRect.top + iRect.height/2 - mRect.top;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
+    line.setAttribute('stroke', '#ccc');
+    line.setAttribute('stroke-width', '1');
+    line.setAttribute('stroke-dasharray', '4,3');
+    line.setAttribute('data-idx', idx);
+    svg.appendChild(line);
+  });
+}
+
+// ── 클릭 인터랙션 ──
+let activeIdx = null;
+
+function selectItem(idx) {
+  // 같은 거 다시 누르면 해제
+  if (activeIdx === idx) { clearSelection(); return; }
+  clearSelection();
+  activeIdx = idx;
+
+  // 핀 활성화
+  const pin = document.querySelector(`.pin[data-idx="${idx}"]`);
+  if (pin) pin.classList.add('active');
+
+  // 영역 하이라이트
+  const zone = document.querySelector(`.zone[data-idx="${idx}"]`);
+  if (zone) zone.classList.add('active');
+
+  // 항목 하이라이트
+  const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+  if (itm) itm.classList.add('active');
+
+  // 연결선 색 변경
+  const line = document.querySelector(`#connSvg line[data-idx="${idx}"]`);
+  if (line) { line.setAttribute('stroke', '#2563eb'); line.setAttribute('stroke-width', '1.5'); }
+}
+
+function clearSelection() {
+  activeIdx = null;
+  document.querySelectorAll('.pin.active').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.zone.active').forEach(z => z.classList.remove('active'));
+  document.querySelectorAll('.itm.active').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('#connSvg line').forEach(l => { l.setAttribute('stroke','#ccc'); l.setAttribute('stroke-width','1'); });
+}
+
+// 이벤트 바인딩
+document.addEventListener('click', (e) => {
+  const pin = e.target.closest('.pin');
+  const itm = e.target.closest('.itm');
+  if (pin) { selectItem(pin.dataset.idx); return; }
+  if (itm && itm.dataset.idx !== undefined) { selectItem(itm.dataset.idx); return; }
+  // 바깥 클릭 시 해제
+  if (!e.target.closest('.zone') && !e.target.closest('.itm')) clearSelection();
+});
+
+window.addEventListener('load', () => { drawBrackets(); drawConnectors(); });
+window.addEventListener('resize', () => { drawBrackets(); drawConnectors(); });
+
+// Twemoji로 국기 이모지를 실제 이미지로 변환
+if (typeof twemoji !== 'undefined') twemoji.parse(document.body, { folder: 'svg', ext: '.svg' });
+</script>
+
+</body>
+</html>

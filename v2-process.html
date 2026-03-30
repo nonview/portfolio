@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가입 프로세스 다이어그램 — Liberti</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
+    background: #fafafa;
+    color: #222;
+    padding: 32px 40px 60px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 28px;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex;
+    gap: 28px;
+    margin-bottom: 32px;
+    padding: 14px 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: fit-content;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .legend-box {
+    width: 52px; height: 28px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+  }
+  .legend-box.page {
+    border: 1.5px solid #aaa;
+    background: #fff;
+  }
+  .legend-box.question {
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid #aaa;
+    background: #fff;
+    border-radius: 3px;
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
+  .legend-box.internal {
+    background: #888;
+    color: #fff;
+    border-radius: 4px;
+  }
+
+  /* ── Guide Button + Popup ── */
+  .guide-btn {
+    padding: 6px 16px;
+    border: 1.5px solid #ddd;
+    border-radius: 20px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  .guide-btn:hover { background: #f5f5f5; }
+  .guide-popup {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+  .guide-popup.active { display: flex; }
+  .guide-popup-inner {
+    background: #fff;
+    border-radius: 12px;
+    width: 520px;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+  .guide-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+  }
+  .guide-popup-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #999;
+    padding: 4px 8px;
+  }
+  .guide-popup-close:hover { color: #333; }
+  .guide-popup-body {
+    padding: 20px;
+  }
+
+  /* ── Notes (legacy) ── */
+  .notes {
+    margin-bottom: 32px;
+    padding: 14px 20px;
+    background: #fffde7;
+    border-left: 4px solid #fbc02d;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #555;
+  }
+  .notes strong { color: #333; }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+    overflow: visible;
+  }
+  .section:last-child { border-bottom: none; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a73e8;
+    margin-bottom: 12px;
+    padding: 6px 12px;
+    background: #e8f0fe;
+    border-radius: 6px;
+    width: fit-content;
+  }
+  .guide-btn-sm {
+    padding: 3px 10px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 10px;
+    color: #999;
+    cursor: pointer;
+  }
+  .guide-btn-sm:hover { background: #f5f5f5; color: #555; }
+
+  .flow-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 12px;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-width: max-content;
+    padding: 4px 0;
+  }
+
+  /* ── Boxes ── */
+  .box {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .box .name {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+  .box .pid {
+    font-size: 8px;
+    color: #999;
+    margin-top: 2px;
+  }
+
+  .box.page .inner {
+    border: 1.5px solid #aaa;
+    background: #fff;
+    border-radius: 5px;
+    padding: 7px 10px 5px;
+    height: 38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .box.question {
+    width: 66px;
+    height: 66px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .box.question .inner {
+    position: absolute;
+    width: 46px;
+    height: 46px;
+    background: #fff;
+    border: 1.5px solid #aaa;
+    border-radius: 2px;
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    flex-direction: row;
+  }
+  .box.question .name {
+    transform: rotate(-45deg);
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: normal;
+    width: 38px;
+    text-align: center;
+  }
+  .box.internal .inner {
+    background: #888;
+    color: #fff;
+    border-radius: 5px;
+    padding: 7px 10px 5px;
+    height: 38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .box.internal .name { color: #fff; }
+  .box.internal .pid { display: none; }
+
+  /* grouped questions inside a page outline (실선) */
+  .group-box {
+    border: 1.5px solid #aaa;
+    border-radius: 6px;
+    padding: 6px 6px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    margin: 0 1px;
+    flex-shrink: 0;
+    background: #fff;
+  }
+  .group-box .group-label {
+    position: absolute;
+    top: -9px;
+    left: 12px;
+    background: #fafafa;
+    padding: 0 5px;
+    font-size: 9px;
+    color: #999;
+    font-weight: 600;
+  }
+
+  /* ── Arrows ── */
+  .arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    flex-shrink: 0;
+    position: relative;
+    height: 38px;
+  }
+  .arrow .line {
+    width: 16px;
+    height: 1.5px;
+    background: #999;
+    position: relative;
+  }
+  .arrow .line::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border: 3px solid transparent;
+    border-left: 4px solid #999;
+  }
+  .arrow .label {
+    font-size: 9px;
+    color: #333;
+    white-space: nowrap;
+    margin-bottom: 1px;
+    font-weight: 600;
+  }
+
+  /* ── Fork (branching) ── */
+  .fork {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+    overflow: visible;
+  }
+  .fork-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    min-width: max-content;
+    overflow: visible;
+  }
+  .fork-line {
+    width: 16px;
+    flex-shrink: 0;
+    align-self: stretch;
+    position: relative;
+  }
+  .fork-line::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 1.5px;
+    background: #999;
+  }
+  .fork-line.fork-top::before {
+    top: 50%;
+    bottom: 0;
+  }
+  .fork-line.fork-bottom::before {
+    top: 0;
+    bottom: 50%;
+  }
+  .fork-line.fork-mid::before {
+    top: 0;
+    bottom: 0;
+  }
+  .fork-line::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 1.5px;
+    background: #999;
+  }
+  /* fork 화살표 삼각형 */
+  .fork-line .fork-arrow {
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border: 3px solid transparent;
+    border-left: 4px solid #999;
+  }
+
+  /* ── Section note ── */
+  .section-note {
+    font-size: 11px;
+    color: #777;
+    margin-top: 4px;
+    padding-left: 8px;
+    font-style: italic;
+  }
+
+  /* ── Page Group (큰 실선 박스로 여러 요소를 묶음) ── */
+  .page-group {
+    border: 1.5px solid #aaa;
+    border-radius: 6px;
+    padding: 14px 8px 8px;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    background: #fff;
+    flex-shrink: 0;
+    align-self: center;
+    overflow: visible;
+  }
+  .page-group .group-label {
+    position: absolute;
+    top: -8px;
+    left: 12px;
+    background: #fafafa;
+    padding: 0 5px;
+    font-size: 9px;
+    color: #999;
+    font-weight: 600;
+    white-space: nowrap;
+    z-index: 1;
+  }
+  .page-group .group-pid {
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    background: #fafafa;
+    padding: 0 5px;
+    font-size: 8px;
+    color: #bbb;
+    white-space: nowrap;
+    z-index: 1;
+  }
+  .page-group .pg-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* ── Thumbnail (hover tooltip) ── */
+  .box { position: relative; }
+  #floating-thumb {
+    display: none;
+    position: fixed;
+    width: 240px;
+    height: 160px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    z-index: 9999;
+    pointer-events: none;
+  }
+  #floating-thumb iframe {
+    width: 400%;
+    height: 400%;
+    transform: scale(0.25);
+    transform-origin: top left;
+    border: none;
+    pointer-events: none;
+  }
+
+  /* scrollbar */
+  .flow-scroll::-webkit-scrollbar { height: 6px; }
+  .flow-scroll::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+  /* ── 현재 페이지 하이라이트 ── */
+  .box.page-current .inner {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.25);
+    background: #fffbeb;
+  }
+  .box.page-current .pid { color: #d97706; font-weight: 700; }
+  .box.page-current .name { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- 안내사항 팝업 -->
+<div class="guide-popup" id="guidePopup">
+  <div class="guide-popup-inner">
+    <div class="guide-popup-header">
+      <span style="font-weight:700;">안내사항</span>
+      <button class="guide-popup-close" onclick="document.getElementById('guidePopup').classList.remove('active')">✕</button>
+    </div>
+    <div class="guide-popup-body">
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:700;margin-bottom:8px;font-size:13px;">범례</div>
+        <div class="legend" style="margin-bottom:0;">
+          <div class="legend-item">
+            <div class="legend-box page">페이지</div>
+            <span>별도 화면</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-box question"></div>
+            <span>분기 (마름모)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-box internal">내부</div>
+            <span>내부확인</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:700;margin-bottom:8px;font-size:13px;">참고사항</div>
+        <div style="font-size:12px;line-height:1.8;color:#555;">
+          &bull; UBO = 실질적지배자 / 실제소유자<br>
+          &bull; 현재 지급조서, CRS, FATCA 관련 부분이 없음 &gt; 신탁은행과 협의 후 추가 예정
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 뷰포트 기준 floating 섬네일 -->
+<div id="floating-thumb"><iframe id="floating-thumb-iframe" loading="lazy"></iframe></div>
+
+<div id="diagram"></div>
+
+<script>
+// ─── Data helpers ───
+function page(name, pid) {
+  return { type: 'page', name, pid };
+}
+function question(name, pid) {
+  return { type: 'question', name, pid: pid || '' };
+}
+function internal(name) {
+  return { type: 'internal', name, pid: '' };
+}
+function arrow(label) {
+  return { type: 'arrow', label: label || '' };
+}
+function groupStart(label) {
+  return { type: 'group-start', label };
+}
+function groupEnd() {
+  return { type: 'group-end' };
+}
+function fork(paths) {
+  return { type: 'fork', paths };
+}
+function pageGroup(label, pid, contentRows) {
+  return { type: 'page-group', label, pid, rows: contentRows };
+}
+
+// ─── 공통 경로 헬퍼 ───
+function jpIndividualEnd() {
+  return [
+    page('일본고객정보입력', 'REG-IND-004'), arrow(),
+    page('일본고객본인확인\n(마이넘버)', 'REG-IND-005'), arrow(),
+    page('본인확인완료', 'REG-IND-006'), arrow(),
+    page('서류제출', 'REG-IND-007'), arrow(),
+    page('서류제출완료', 'REG-IND-008'), arrow(),
+    page('로그인', 'CMN-001'), arrow(),
+    page('거래소 홈', 'EXC-001'),
+  ];
+}
+function overseasIndividualEnd() {
+  return [
+    page('외국고객정보입력', 'REG-IND-009'), arrow(),
+    page('외국고객본인확인\n(여권)', 'REG-IND-010'), arrow(),
+    page('본인확인완료', 'REG-IND-006'), arrow(),
+    page('주소확인 서류\n업로드', 'REG-IND-011'), arrow(),
+    page('서류제출완료', 'REG-IND-008'), arrow(),
+    page('로그인', 'CMN-001'), arrow(),
+    page('거래소 홈', 'EXC-001'),
+  ];
+}
+function jpCorpEnd_noUBO() {
+  return [
+    page('담당자정보입력', 'REG-COM-006'), arrow(),
+    page('담당자본인확인', 'REG-COM-007'), arrow(),
+    page('서류제출', 'REG-COM-008'), arrow(),
+    page('서류제출완료', 'REG-COM-009'), arrow(),
+    page('로그인', 'CMN-001'), arrow(),
+    page('거래소 홈', 'EXC-001'),
+  ];
+}
+function jpCorpEnd_withUBO(extraBefore) {
+  return [
+    ...(extraBefore || []),
+    page('UBO 입력', 'REG-COM-005'), arrow(),
+    ...jpCorpEnd_noUBO(),
+  ];
+}
+
+// ─── Section definitions ───
+const sections = [
+  {
+    title: '섹션 1: 개인',
+    note: '* 거주 기준은 국적이 아닌 거주지 / 일본 거주 개인은 가입목적 선택 필수 / 해외 거주 개인은 가입목적 없음 / 적성설문 판정로직은 REG-IND-002 내 질문 기반',
+    rows: [
+      {
+        type: 'flow',
+        items: [
+          page('유저타입선택', 'REG-001'), arrow(), question('개인/법인?'), arrow('개인'), question('투자조합?'),
+        ]
+      },
+      {
+        type: 'fork',
+        paths: [
+          // ── X: 투자조합 아님 ──
+          {
+            label: 'X',
+            items: [arrow(), question('거주국가')],
+            subfork: {
+              type: 'fork',
+              paths: [
+                {
+                  label: '일본',
+                  items: [
+                    page('회원가입', 'REG-002'), arrow(),
+                    page('가입목적', 'REG-IND-001'),
+                  ],
+                  subfork: {
+                    type: 'fork',
+                    paths: [
+                      {
+                        label: '투자',
+                        items: [
+                          page('적성설문', 'REG-IND-002'),
+                        ],
+                        subfork: {
+                          type: 'fork',
+                          paths: [
+                            {
+                              label: '통과',
+                              items: jpIndividualEnd(),
+                            },
+                            {
+                              label: '미충족',
+                              items: [
+                                page('매도만 가능\n안내', 'REG-IND-003'),
+                              ],
+                              subfork: {
+                                type: 'fork',
+                                paths: [
+                                  { label: 'Yes\n(매도계정)', items: jpIndividualEnd() },
+                                  { label: 'No', items: [internal('가입 종료')] },
+                                ]
+                              }
+                            },
+                          ]
+                        }
+                      },
+                      {
+                        label: '매도\n(매도계정)',
+                        items: jpIndividualEnd(),
+                      },
+                    ]
+                  }
+                },
+                {
+                  label: '해외',
+                  items: [
+                    page('회원가입', 'REG-002'), arrow(),
+                    ...overseasIndividualEnd(),
+                  ]
+                },
+              ]
+            }
+          },
+          // ── O: 투자조합 ──
+          {
+            label: 'O',
+            items: [arrow(), question('거주국가')],
+            subfork: {
+              type: 'fork',
+              paths: [
+                {
+                  label: '일본',
+                  items: [
+                    page('회원가입', 'REG-002'), arrow(),
+                    page('조합정보입력', 'REG-IND-012'), arrow(),
+                    internal('LPS 목록\n내부 확인'), arrow(),
+                    ...jpIndividualEnd(),
+                  ]
+                },
+                {
+                  label: '해외',
+                  items: [
+                    page('회원가입', 'REG-002'), arrow(),
+                    page('조합정보입력', 'REG-IND-012'), arrow(),
+                    ...overseasIndividualEnd(),
+                  ]
+                },
+              ]
+            }
+          },
+        ]
+      }
+    ]
+  },
+  {
+    title: '섹션 2: 법인',
+    note: '* 가입목적 페이지 없음 — 법인 자격 판정에서 매수 가능 여부 결정 / UBO = 실질적지배자(일본) / 실제소유자(해외) / 법인 조합은 법인 자격 자동 승계 (별도 확인 없음)',
+    rows: [
+      {
+        type: 'flow',
+        items: [
+          page('유저타입선택', 'REG-001'), arrow(), question('개인/법인?'), arrow('법인'), question('투자조합?'),
+        ]
+      },
+      {
+        type: 'fork',
+        paths: [
+          // ── X: 법인 단독 ──
+          {
+            label: 'X',
+            items: [arrow(), question('소재지')],
+            subfork: {
+              type: 'fork',
+              paths: [
+                {
+                  label: '해외',
+                  items: [
+                    page('회원가입', 'REG-002'), arrow(),
+                    page('법인정보입력', 'REG-COM-003'), arrow(),
+                    ...jpCorpEnd_withUBO(),
+                  ]
+                },
+                {
+                  label: '일본',
+                  items: [
+                    page('회원가입', 'REG-002'), arrow(),
+                    page('법인정보입력', 'REG-COM-003'), arrow(),
+                    internal('적격기관\n리스트 확인'),
+                  ],
+                  subfork: {
+                    type: 'fork',
+                    paths: [
+                      {
+                        label: '적격기관 O',
+                        items: [internal('상장 여부\n(내부 DB)')],
+                        subfork: {
+                          type: 'fork',
+                          paths: [
+                            { label: '상장\n(UBO 패스)',  items: jpCorpEnd_noUBO() },
+                            { label: '비상장', items: jpCorpEnd_withUBO() },
+                          ]
+                        }
+                      },
+                      {
+                        label: '적격기관 X',
+                        items: [question('상장?')],
+                        subfork: {
+                          type: 'fork',
+                          paths: [
+                            { label: '상장\n(UBO 패스)', items: jpCorpEnd_noUBO() },
+                            {
+                              label: '비상장',
+                              items: [question('자본금\n5억엔 이상?')],
+                              subfork: {
+                                type: 'fork',
+                                paths: [
+                                  { label: '이상', items: jpCorpEnd_withUBO() },
+                                  { label: '미만', items: [page('매도 불가 안내', 'REG-COM-012')] },
+                                ]
+                              }
+                            },
+                          ]
+                        }
+                      },
+                    ]
+                  }
+                },
+              ]
+            }
+          },
+          // ── O: 법인이 운영하는 조합 (법인 자격 승계) ──
+          {
+            label: 'O',
+            items: [arrow(), question('소재지')],
+            subfork: {
+              type: 'fork',
+              paths: [
+                {
+                  label: '해외',
+                  items: [
+                    page('회원가입', 'REG-002'), arrow(),
+                    page('법인정보입력', 'REG-COM-003'), arrow(),
+                    page('조합정보입력', 'REG-COM-013'), arrow(),
+                    ...jpCorpEnd_withUBO(),
+                  ]
+                },
+                {
+                  label: '일본',
+                  items: [
+                    page('회원가입', 'REG-002'), arrow(),
+                    page('법인정보입력', 'REG-COM-003'), arrow(),
+                    internal('적격기관\n리스트 확인'),
+                  ],
+                  subfork: {
+                    type: 'fork',
+                    paths: [
+                      {
+                        label: '적격기관 O',
+                        items: [internal('상장 여부\n(내부 DB)'), page('조합정보입력', 'REG-COM-013'), arrow()],
+                        subfork: {
+                          type: 'fork',
+                          paths: [
+                            { label: '상장\n(UBO 패스)', items: jpCorpEnd_noUBO() },
+                            { label: '비상장', items: jpCorpEnd_withUBO() },
+                          ]
+                        }
+                      },
+                      {
+                        label: '적격기관 X',
+                        items: [question('상장?')],
+                        subfork: {
+                          type: 'fork',
+                          paths: [
+                            {
+                              label: '상장\n(UBO 패스)',
+                              items: [page('조합정보입력', 'REG-COM-013'), arrow(), ...jpCorpEnd_noUBO()]
+                            },
+                            {
+                              label: '비상장',
+                              items: [question('자본금\n5억엔 이상?')],
+                              subfork: {
+                                type: 'fork',
+                                paths: [
+                                  {
+                                    label: '이상',
+                                    items: jpCorpEnd_withUBO([page('조합정보입력', 'REG-COM-013'), arrow()])
+                                  },
+                                  { label: '미만', items: [page('매도 불가 안내', 'REG-COM-012')] },
+                                ]
+                              }
+                            },
+                          ]
+                        }
+                      },
+                    ]
+                  }
+                },
+              ]
+            }
+          },
+        ]
+      }
+    ]
+  },
+];
+
+// ─── File map (pid → v2 파일명) ───
+const FILE_MAP = {
+  // 공통
+  'REG-001':     'v2-REG-001-A.html',
+  'REG-002':     'v2-SCR-REG-002.html',
+  // 개인 가입
+  'REG-IND-001': 'v2-REG-IND-001.html',   // 가입목적
+  'REG-IND-002': 'v2-REG-IND-002.html',   // 적성설문
+  'REG-IND-003': 'v2-REG-IND-003.html',   // 매도만가능안내
+  'REG-IND-004': 'v2-REG-IND-004.html',   // 일본고객정보입력
+  'REG-IND-005': 'v2-REG-IND-005.html',   // 본인확인(마이넘버)
+  'REG-IND-006': 'v2-SCR-KYC-002.html',   // 본인확인완료
+  'REG-IND-007': 'v2-SCR-DOC-001.html',   // 서류제출(개인)
+  'REG-IND-008': 'v2-SCR-DOC-099.html',   // 서류제출완료
+  'REG-IND-009': 'v2-REG-IND-009.html',   // 외국고객정보입력
+  'REG-IND-010': 'v2-REG-IND-010.html',   // 본인확인(여권)
+  'REG-IND-011': '',                        // 주소확인 서류 업로드 (미작성)
+  'REG-IND-012': 'v2-REG-IND-012.html',   // 조합정보입력
+  // 법인 가입
+  'REG-COM-003': 'v2-REG-COM-003.html',   // 법인정보입력(일본)
+  'REG-COM-004': 'v2-REG-COM-004.html',   // 가입불가 안내
+  'REG-COM-005': 'v2-REG-COM-005.html',   // UBO 입력
+  'REG-COM-006': 'v2-REG-COM-006.html',   // 담당자정보입력
+  'REG-COM-007': 'v2-REG-COM-008.html',   // 담당자본인확인
+  'REG-COM-008': 'v2-SCR-DOC-003.html',   // 서류제출(법인)
+  'REG-COM-009': 'v2-SCR-DOC-099.html',   // 서류제출완료
+  'REG-COM-012': 'v2-REG-COM-012.html',   // 매도 불가 안내
+  // 공통 마무리
+  'CMN-001':     'v2-CMN-001.html',        // 로그인
+  'EXC-001':     '',                        // 거래소 홈 (미작성)
+};
+
+// ─── Render ───
+const diagram = document.getElementById('diagram');
+
+function renderItem(item) {
+  if (item.type === 'arrow') {
+    const el = document.createElement('div');
+    el.className = 'arrow';
+    if (item.label) {
+      const lbl = document.createElement('div');
+      lbl.className = 'label';
+      lbl.textContent = item.label;
+      el.appendChild(lbl);
+    }
+    const line = document.createElement('div');
+    line.className = 'line';
+    el.appendChild(line);
+    return el;
+  }
+  if (item.type === 'group-start') {
+    const el = document.createElement('div');
+    el.className = 'group-box';
+    el.dataset.groupStart = '1';
+    if (item.label) {
+      const lbl = document.createElement('div');
+      lbl.className = 'group-label';
+      lbl.textContent = item.label;
+      el.appendChild(lbl);
+    }
+    return el;
+  }
+  if (item.type === 'group-end') {
+    return null; // signal
+  }
+
+  // Box types
+  const wrapper = document.createElement('div');
+  wrapper.className = 'box ' + item.type;
+
+  const inner = document.createElement('div');
+  inner.className = 'inner';
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'name';
+  nameEl.innerHTML = item.name.replace(/\n/g, '<br>');
+  inner.appendChild(nameEl);
+
+  if (item.pid) {
+    const pidEl = document.createElement('div');
+    pidEl.className = 'pid';
+    pidEl.textContent = item.pid;
+    inner.appendChild(pidEl);
+  }
+
+  // 페이지 박스 클릭 시 parent로 navigate postMessage
+  if (item.type === 'page' && item.pid) {
+    inner.style.cursor = 'pointer';
+    inner.onclick = () => {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'navigate', pageId: item.pid }, '*');
+      }
+    };
+  }
+
+  wrapper.appendChild(inner);
+
+  // floating 섬네일용 data 속성만 기록
+  if (item.type === 'page' && item.pid && FILE_MAP[item.pid]) {
+    wrapper.dataset.thumbSrc = FILE_MAP[item.pid];
+    wrapper.dataset.thumbPid = item.pid;
+  }
+
+  return wrapper;
+}
+
+function renderItems(items, container) {
+  let currentGroup = null;
+  items.forEach(item => {
+    if (item.type === 'group-start') {
+      currentGroup = renderItem(item);
+      return;
+    }
+    if (item.type === 'group-end') {
+      if (currentGroup) {
+        container.appendChild(currentGroup);
+        currentGroup = null;
+      }
+      return;
+    }
+
+    // page-group: 하나의 큰 실선 박스 안에 flow + fork를 모두 포함
+    if (item.type === 'page-group') {
+      const pgDiv = document.createElement('div');
+      pgDiv.className = 'page-group';
+
+      const label = document.createElement('span');
+      label.className = 'group-label';
+      label.textContent = item.label;
+      pgDiv.appendChild(label);
+
+      if (item.pid) {
+        const pid = document.createElement('span');
+        pid.className = 'group-pid';
+        pid.textContent = item.pid;
+        pgDiv.appendChild(pid);
+      }
+
+      // flow items + fork inside the group — 한 줄(row)로 이어서 렌더링
+      const flowDiv = document.createElement('div');
+      flowDiv.className = 'pg-flow';
+      if (item.rows.flow) {
+        renderItems(item.rows.flow, flowDiv);
+      }
+      if (item.rows.fork) {
+        renderFork(item.rows.fork, flowDiv);
+      }
+      pgDiv.appendChild(flowDiv);
+
+      if (currentGroup) {
+        currentGroup.appendChild(pgDiv);
+      } else {
+        container.appendChild(pgDiv);
+      }
+      return;
+    }
+
+    const el = renderItem(item);
+    if (!el) return;
+    if (currentGroup) {
+      currentGroup.appendChild(el);
+    } else {
+      container.appendChild(el);
+    }
+  });
+  if (currentGroup) {
+    container.appendChild(currentGroup);
+  }
+}
+
+function renderFork(forkData, container) {
+  const forkDiv = document.createElement('div');
+  forkDiv.className = 'fork';
+
+  const pathCount = forkData.paths.length;
+
+  forkData.paths.forEach((path, idx) => {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'fork-row';
+
+    // Fork connector line
+    const forkLineDiv = document.createElement('div');
+    forkLineDiv.className = 'fork-line';
+    if (idx === 0) {
+      forkLineDiv.classList.add('fork-top');
+    } else if (idx === pathCount - 1) {
+      forkLineDiv.classList.add('fork-bottom');
+    } else {
+      forkLineDiv.classList.add('fork-mid');
+    }
+    // fork-line 끝에 화살표 삼각형 추가
+    const forkArrow = document.createElement('div');
+    forkArrow.className = 'fork-arrow';
+    forkLineDiv.appendChild(forkArrow);
+    rowDiv.appendChild(forkLineDiv);
+
+    // 분기 라벨 (화살표 대신 라벨만 표시)
+    if (path.label) {
+      const lbl = document.createElement('span');
+      lbl.style.cssText = 'font-size:9px;color:#333;font-weight:600;padding:0 4px;white-space:nowrap;align-self:center;';
+      lbl.textContent = path.label;
+      rowDiv.appendChild(lbl);
+    }
+
+    // Render path items
+    renderItems(path.items, rowDiv);
+
+    // If this path has a subfork, render it recursively
+    if (path.subfork) {
+      renderFork(path.subfork, rowDiv);
+    }
+
+    forkDiv.appendChild(rowDiv);
+  });
+
+  container.appendChild(forkDiv);
+}
+
+sections.forEach(sec => {
+  const sectionDiv = document.createElement('div');
+  sectionDiv.className = 'section';
+
+  const header = document.createElement('div');
+  header.className = 'section-header';
+  const titleSpan = document.createElement('span');
+  titleSpan.textContent = sec.title;
+  header.appendChild(titleSpan);
+  const guideBtn = document.createElement('button');
+  guideBtn.className = 'guide-btn-sm';
+  guideBtn.textContent = '안내사항';
+  guideBtn.onclick = () => document.getElementById('guidePopup').classList.add('active');
+  header.appendChild(guideBtn);
+  sectionDiv.appendChild(header);
+
+  const scrollDiv = document.createElement('div');
+  scrollDiv.className = 'flow-scroll';
+
+  // We build a single flow-row for flow items, and fork containers for forks
+  // All rows in a section go into a single flex container
+  const flowContainer = document.createElement('div');
+  flowContainer.className = 'flow-row';
+
+  sec.rows.forEach(row => {
+    if (row.type === 'flow') {
+      renderItems(row.items, flowContainer);
+    } else if (row.type === 'fork') {
+      renderFork(row, flowContainer);
+    }
+  });
+
+  scrollDiv.appendChild(flowContainer);
+  sectionDiv.appendChild(scrollDiv);
+
+  if (sec.note) {
+    const noteDiv = document.createElement('div');
+    noteDiv.className = 'section-note';
+    noteDiv.textContent = sec.note;
+    sectionDiv.appendChild(noteDiv);
+  }
+
+  diagram.appendChild(sectionDiv);
+});
+
+// ── 부모(v2-all-new.html)에서 현재 페이지 하이라이트 메시지 수신 ──
+window.addEventListener('message', (e) => {
+  if (!e.data || e.data.type !== 'highlightPage') return;
+  const pid = e.data.pid;
+  // 이전 하이라이트 제거
+  document.querySelectorAll('.box.page-current').forEach(el => el.classList.remove('page-current'));
+  if (!pid) return;
+  // 해당 pid 박스 모두 하이라이트 (동일 페이지가 여러 경로에 등장할 수 있음)
+  document.querySelectorAll(`.box[data-thumb-pid="${pid}"]`).forEach(el => {
+    el.classList.add('page-current');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+  });
+});
+
+// ── Floating 섬네일 hover ──
+const floatThumb = document.getElementById('floating-thumb');
+const floatIframe = document.getElementById('floating-thumb-iframe');
+let currentSrc = '';
+
+document.addEventListener('mouseover', (e) => {
+  const box = e.target.closest('.box[data-thumb-src]');
+  if (!box) return;
+
+  const src = box.dataset.thumbSrc;
+  if (src !== currentSrc) {
+    floatIframe.src = src;
+    currentSrc = src;
+  }
+
+  const r = box.getBoundingClientRect();
+  const tw = 240, th = 160;
+  // 박스 위쪽 우선, 뷰포트 벗어나면 아래쪽
+  let top = r.top - th - 8;
+  if (top < 8) top = r.bottom + 8;
+  let left = r.left + r.width / 2 - tw / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+
+  floatThumb.style.top  = top  + 'px';
+  floatThumb.style.left = left + 'px';
+  floatThumb.style.display = 'block';
+
+  // 클릭: 해당 페이지로 이동
+  floatThumb.onclick = () => {
+    const pid = box.dataset.thumbPid;
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'navigate', pageId: pid }, '*');
+    } else {
+      window.open(src, '_blank');
+    }
+  };
+});
+
+document.addEventListener('mouseout', (e) => {
+  const box = e.target.closest('.box[data-thumb-src]');
+  if (!box) return;
+  // relatedTarget이 같은 box 안이면 유지
+  if (box.contains(e.relatedTarget)) return;
+  floatThumb.style.display = 'none';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,497 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>화면기획서 v2 — QR코드 스캔</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --surface: #fff;
+    --border: #ddd;
+    --text: #1a1a1a;
+    --text-sub: #888;
+    --accent: #2563eb;
+    --font: 'Noto Sans KR', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); }
+
+  .header {
+    background:var(--surface);
+    padding:20px 32px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .crumb { font-size:12px; color:#aaa; font-weight:600; }
+  .crumb .s { margin:0 6px; }
+  .title { font-size:24px; font-weight:800; }
+  .sid { font-size:11px; color:var(--accent); background:#e8eefb; padding:3px 8px; border-radius:4px; font-weight:600; font-family:monospace; }
+
+  .main {
+    display:flex;
+    padding:20px 32px 0;
+    gap:32px;
+    align-items:flex-start;
+    position:relative;
+  }
+
+  .screen-panel {
+    display:flex;
+    gap:0;
+    flex-shrink:0;
+  }
+
+  .labels {
+    display:flex;
+    flex-direction:column;
+    width:70px;
+    flex-shrink:0;
+  }
+  .lbl {
+    flex:none;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    position:relative;
+  }
+  .lbl-text {
+    font-size:12px;
+    font-weight:600;
+    color:#888;
+    text-align:right;
+    padding-right:12px;
+    line-height:1.3;
+  }
+
+  .frame {
+    width:320px;
+    background:var(--surface);
+    border:1px solid #ccc;
+    border-radius:12px;
+    overflow:visible;
+    flex-shrink:0;
+    position:relative;
+  }
+  .zone {
+    padding:20px;
+    border-bottom:1px dashed #e0e0e0;
+    position:relative;
+  }
+  .zone:last-child { border-bottom:none; }
+
+  .pin {
+    position:absolute;
+    width:22px; height:22px; border-radius:50%;
+    background:#e0e0e0; color:#888;
+    font-size:11px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    z-index:5;
+    transition: all .2s;
+    user-select:none;
+  }
+  .pin:hover { background:#ccc; }
+  .pin.active { background:var(--accent); color:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.2); }
+
+  .zone-highlight {
+    display:none;
+    position:absolute;
+    inset:4px;
+    border:2px solid var(--accent);
+    border-radius:8px;
+    pointer-events:none;
+    z-index:4;
+  }
+  .zone.active .zone-highlight { display:block; }
+
+  #connSvg {
+    position:absolute;
+    top:0; left:0;
+    pointer-events:none;
+    z-index:3;
+    overflow:visible;
+  }
+
+  .items {
+    flex:1;
+    min-width:220px;
+    max-width:320px;
+  }
+  .itm > div:nth-child(2) { flex:1; min-width:0; }
+  .itm {
+    display:flex;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid #eee;
+    align-items:flex-start;
+    border-radius:6px;
+    transition: background .2s;
+    margin:0 -8px;
+    padding-left:8px;
+    padding-right:8px;
+  }
+  .itm:last-child { border-bottom:none; }
+  .itm.active { background:#e8eefb; }
+  .num {
+    width:24px; height:24px; border-radius:50%;
+    background:#e0e0e0; color:#888; font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1px;
+    transition: all .2s;
+  }
+  .itm.active .num { background:var(--accent); color:#fff; }
+  .itm-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+  .itm-desc { font-size:12px; color:#777; line-height:1.5; }
+
+  /* === 오른쪽: 상세내용 컬럼 === */
+  .detail-col { flex:1; min-width:260px; max-width:400px; }
+  .dtl { padding:14px 0 14px 20px; border-bottom:1px solid #eee; border-left:2px solid #e8eefb; min-height:53px; transition:border-left-color .2s, background .2s; }
+  .dtl:last-child { border-bottom:none; }
+  .dtl.active { border-left-color:#2563eb; background:#f5f8ff; border-radius:0 6px 6px 0; }
+  .detail-label { font-size:10px; font-weight:700; color:#b0b0b0; letter-spacing:0.07em; text-transform:uppercase; margin-bottom:6px; }
+  .dtl-body { font-size:12px; color:#666; line-height:1.5; }
+  .itm-note { font-size:11px; color:#aaa; margin-top:4px; font-style:italic; }
+
+  .footer-note {
+    padding:20px 32px 0;
+  }
+  .note-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:28px;
+  }
+  .note-title {
+    font-size:14px; font-weight:700; margin-bottom:12px;
+    padding-left:12px;
+    border-left:3px solid var(--accent);
+  }
+  .note-body { font-size:12px; color:#777; line-height:1.7; }
+
+  /* 스텝바 */
+  .stepbar {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:0;
+    padding:4px 0;
+  }
+  .step {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    font-weight:600;
+    color:#bbb;
+  }
+  .step.done { color:#22c55e; }
+  .step.current { color:var(--accent); }
+  .step-circle {
+    width:20px; height:20px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:700;
+    background:#e0e0e0; color:#888;
+  }
+  .step.done .step-circle { background:#22c55e; color:#fff; }
+  .step.current .step-circle { background:var(--accent); color:#fff; }
+  .step-line {
+    width:40px; height:2px; background:#ddd; margin:0 8px;
+  }
+  .step.done + .step-line { background:#22c55e; }
+  ::-webkit-scrollbar{display:none !important;} *{scrollbar-width:none !important;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="crumb"><span>eKYC</span><span class="s">›</span><span>QR코드 스캔</span></div>
+  <h1 class="title">QR코드 스캔</h1>
+  <span class="sid">SCR-KYC-001</span>
+</header>
+
+<div class="main">
+
+  <div class="screen-panel">
+
+    <div style="position:relative;display:flex;">
+      <div class="labels" id="labels">
+        <div class="lbl"><span class="lbl-text">상단 영역</span></div>
+        <div class="lbl"><span class="lbl-text">입력 영역</span></div>
+        <div class="lbl"><span class="lbl-text">하단 버튼<br>영역</span></div>
+      </div>
+      <svg id="bracketSvg" width="24" style="flex-shrink:0;overflow:visible;"></svg>
+    </div>
+
+    <div class="frame" id="frame">
+
+      <!-- 상단 영역: 스텝바 -->
+      <div class="zone" id="z0" data-idx="0">
+        <div class="zone-highlight"></div>
+        <div class="item-area" data-highlight="0" style="position:relative;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div class="stepbar">
+            <div class="step done">
+              <div class="step-circle">&#10003;</div>
+              <span>고객정보입력</span>
+            </div>
+            <div class="step-line" style="background:#22c55e;"></div>
+            <div class="step current">
+              <div class="step-circle">&#9679;</div>
+              <span>본인확인</span>
+            </div>
+          </div>
+          <div class="pin" data-idx="0" style="top:-6px;right:-8px;">1</div>
+        </div>
+      </div>
+
+      <!-- 입력 영역 -->
+      <div class="zone" id="z1" data-idx="1,2">
+        <div class="zone-highlight"></div>
+
+        <!-- ② 안내문구 + QR코드 -->
+        <div class="item-area" data-highlight="1" style="position:relative;margin-bottom:16px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="text-align:center;padding:8px 0;">
+            <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:16px;">아래 QR코드를 스캔하여<br>본인확인을 시작합니다</div>
+            <div style="width:160px;height:160px;border:2px solid #ccc;border-radius:8px;margin:0 auto;display:flex;align-items:center;justify-content:center;background:#fafafa;">
+              <div style="width:120px;height:120px;background:repeating-conic-gradient(#333 0% 25%, #fff 0% 50%) 0 0/20px 20px;border-radius:4px;"></div>
+            </div>
+          </div>
+          <div class="pin" data-idx="1" style="top:-6px;right:-8px;">2</div>
+        </div>
+
+        <!-- ③ 하단 안내문구 -->
+        <div class="item-area" data-highlight="2" style="position:relative;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="text-align:center;font-size:12px;color:#888;line-height:1.6;padding:8px 0;">
+            스마트폰에서 본인확인절차를<br>마치신 후 아래 버튼을 눌러 주세요
+          </div>
+          <div class="pin" data-idx="2" style="top:-6px;right:-8px;">3</div>
+        </div>
+
+      </div>
+
+      <!-- 하단 버튼 영역 -->
+      <div class="zone" id="z2" data-idx="3">
+        <div class="zone-highlight"></div>
+        <div style="padding:14px;border-radius:8px;background:#22c55e;color:#fff;text-align:center;font-size:14px;font-weight:700;position:relative;">
+          완료
+          <div class="pin" data-idx="3" style="top:-8px;right:-8px;">4</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <svg id="connSvg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;overflow:visible;"></svg>
+
+  <div class="items" id="items">
+
+    <div class="itm" data-idx="0">
+      <div class="num">1</div>
+      <div>
+        <div class="itm-title">스텝바</div>
+        <div class="itm-desc">
+          · 2단계 구성: 고객정보입력 — 본인확인<br>
+          · 고객정보입력: 완료 상태 (녹색 체크)<br>
+          · 본인확인: 현재 단계 (파란색 활성)<br>
+          · 스텝 사이 연결선으로 진행 상태 표시
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="1">
+      <div class="num">2</div>
+      <div>
+        <div class="itm-title">QR코드 영역</div>
+        <div class="itm-desc">
+          · 안내 문구 + QR코드 이미지가 디폴트<br>
+          · QR코드는 eKYC 본인확인 서비스(외부) 연동 URL을 인코딩<br>
+          · 사용자가 스마트폰 카메라로 스캔 → 외부 eKYC 앱/웹으로 이동<br>
+          · 에러 메시지 2종 → 상세내용 참조
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="2">
+      <div class="num">3</div>
+      <div>
+        <div class="itm-title">안내 문구</div>
+        <div class="itm-desc">
+          · "스마트폰에서 본인확인절차를 마치신 후 아래 버튼을 눌러 주세요" 고정 텍스트<br>
+          · 사용자에게 스마트폰 eKYC 완료 후 PC에서 완료 버튼 클릭을 유도
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="3">
+      <div class="num">4</div>
+      <div>
+        <div class="itm-title">완료 버튼</div>
+        <div class="itm-desc">
+          · 녹색 활성 상태가 디폴트<br>
+          · 클릭 시 서버에 eKYC 완료 여부 조회<br>
+          · eKYC 완료 확인됨 → 본인확인 완료 화면(SCR-KYC-002)으로 이동<br>
+          · 에러 메시지 2종 → 상세내용 참조
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- 오른쪽: 상세내용 -->
+  <div class="detail-col" id="detailCol">
+    <div class="dtl" data-idx="0"></div>
+    <div class="dtl" data-idx="1">
+      <div class="detail-label">에러 메시지</div>
+      <div class="dtl-body">· 유효시간 만료: <strong style="color:#e53935;">"QR코드가 만료되었습니다. 새로고침해 주세요"</strong> + 새로고침 버튼 노출<br>· 생성 실패: <strong style="color:#e53935;">"본인확인 서비스에 연결할 수 없습니다"</strong> + 재시도 버튼</div>
+    </div>
+    <div class="dtl" data-idx="2"></div>
+    <div class="dtl" data-idx="3">
+      <div class="detail-label">에러 메시지</div>
+      <div class="dtl-body">· eKYC 미완료: <strong style="color:#e53935;">"본인확인이 아직 완료되지 않았습니다. 스마트폰에서 절차를 완료해 주세요"</strong><br>· eKYC 실패: <strong style="color:#e53935;">"본인확인에 실패했습니다. 다시 시도해 주세요"</strong> + QR코드 재생성</div>
+      <div class="detail-label">선택에 따른 분기</div>
+      <div class="dtl-body">
+        <div style="font-size:11.5px;color:#555;line-height:2;padding:10px 12px;background:#f7f7f5;border-radius:8px;">
+          · 다음 화면: 본인확인 완료 (SCR-KYC-002)
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<section class="footer-note">
+  <div class="note-card">
+    <div class="note-title">비고</div>
+    <div class="note-body">
+      · 이 화면은 고객정보입력 완료 후 eKYC 본인확인을 진행하는 화면입니다.<br>
+      · QR코드 스캔 방식으로 스마트폰의 eKYC 인증 절차를 시작합니다.<br>
+      · eKYC 서비스는 외부 연동이며, 신분증 촬영 + 얼굴 인식 등의 절차가 스마트폰에서 진행됩니다.
+    </div>
+  </div>
+</section>
+
+<script>
+function drawBrackets() {
+  const zones = [document.getElementById('z0'), document.getElementById('z1'), document.getElementById('z2')];
+  const labels = document.querySelectorAll('.lbl');
+  const svg = document.getElementById('bracketSvg');
+  if (!zones.length || !labels.length) return;
+
+  let totalH = 0;
+  zones.forEach((z, i) => {
+    const h = z.offsetHeight;
+    if (labels[i]) labels[i].style.height = h + 'px';
+    totalH += h;
+  });
+
+  svg.setAttribute('height', totalH);
+  svg.innerHTML = '';
+
+  let y = 0;
+  zones.forEach((z) => {
+    const h = z.offsetHeight;
+    const top = y + 6, bot = y + h - 6, x = 4;
+    const mk = (tag, attrs) => {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
+      return el;
+    };
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x+8,y2:top,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:bot,x2:x+8,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    y += h;
+  });
+}
+
+function drawConnectors() {
+  const svg = document.getElementById('connSvg');
+  const main = document.querySelector('.main');
+  if (!svg || !main) return;
+
+  svg.innerHTML = '';
+  const mRect = main.getBoundingClientRect();
+
+  document.querySelectorAll('.pin').forEach(pin => {
+    const idx = pin.dataset.idx;
+    const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+    if (!itm) return;
+
+    const pRect = pin.getBoundingClientRect();
+    const iRect = itm.querySelector('.num').getBoundingClientRect();
+
+    const x1 = pRect.right - mRect.left + 4;
+    const y1 = pRect.top + pRect.height/2 - mRect.top;
+    const x2 = iRect.left - mRect.left - 4;
+    const y2 = iRect.top + iRect.height/2 - mRect.top;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
+    line.setAttribute('stroke', '#ccc');
+    line.setAttribute('stroke-width', '1');
+    line.setAttribute('stroke-dasharray', '4,3');
+    line.setAttribute('data-idx', idx);
+    svg.appendChild(line);
+  });
+}
+
+let activeIdx = null;
+
+function selectItem(idx) {
+  if (activeIdx === idx) { clearSelection(); return; }
+  clearSelection();
+  activeIdx = idx;
+
+  const pin = document.querySelector(`.pin[data-idx="${idx}"]`);
+  if (pin) pin.classList.add('active');
+
+  const area = document.querySelector(`.item-area[data-highlight="${idx}"]`);
+  if (area) area.style.borderColor = '#2563eb';
+
+  document.querySelectorAll('.zone').forEach(z => {
+    const zoneIdxList = (z.dataset.idx || '').split(',');
+    if (zoneIdxList.length === 1 && zoneIdxList.includes(idx)) z.classList.add('active');
+  });
+
+  const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+  if (itm) itm.classList.add('active');
+  const dtl = document.querySelector(`.dtl[data-idx="${idx}"]`);
+  if (dtl) dtl.classList.add('active');
+
+  const line = document.querySelector(`#connSvg line[data-idx="${idx}"]`);
+  if (line) { line.setAttribute('stroke', '#2563eb'); line.setAttribute('stroke-width', '1.5'); }
+}
+
+function clearSelection() {
+  activeIdx = null;
+  document.querySelectorAll('.pin.active').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.zone.active').forEach(z => z.classList.remove('active'));
+  document.querySelectorAll('.itm.active').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.dtl.active').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.item-area').forEach(a => a.style.borderColor = 'transparent');
+  document.querySelectorAll('#connSvg line').forEach(l => { l.setAttribute('stroke','#ccc'); l.setAttribute('stroke-width','1'); });
+}
+
+document.addEventListener('click', (e) => {
+  const pin = e.target.closest('.pin');
+  const itm = e.target.closest('.itm');
+  const dtl = e.target.closest('.dtl');
+  if (pin) { selectItem(pin.dataset.idx); return; }
+  if (itm && itm.dataset.idx !== undefined) { selectItem(itm.dataset.idx); return; }
+  if (dtl && dtl.dataset.idx !== undefined) { selectItem(dtl.dataset.idx); return; }
+  if (!e.target.closest('.zone') && !e.target.closest('.itm') && !e.target.closest('.dtl')) clearSelection();
+});
+
+window.addEventListener('load', () => { drawBrackets(); drawConnectors(); });
+window.addEventListener('resize', () => { drawBrackets(); drawConnectors(); });
+</script>
+
+<script>(function(){function r(){var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight);window.parent&&window.parent.postMessage({type:"iframeHeight",h:h},"*");}if(document.readyState==="complete"){r();setTimeout(r,400);setTimeout(r,1200);}else{window.addEventListener("load",function(){r();setTimeout(r,400);setTimeout(r,1200);});}})();</script>
+</body>
+</html>

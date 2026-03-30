@@ -1,0 +1,655 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>화면기획서 v2 — 법인정보입력 (일본)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --surface: #fff;
+    --border: #ddd;
+    --text: #1a1a1a;
+    --text-sub: #888;
+    --accent: #2563eb;
+    --font: 'Noto Sans KR', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); }
+
+  /* 헤더 */
+  .header {
+    background:var(--surface);
+    padding:20px 32px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .crumb { font-size:12px; color:#aaa; font-weight:600; }
+  .crumb .s { margin:0 6px; }
+  .title { font-size:24px; font-weight:800; }
+  .sid { font-size:11px; color:var(--accent); background:#e8eefb; padding:3px 8px; border-radius:4px; font-weight:600; font-family:monospace; }
+
+  /* 메인 레이아웃 */
+  .main {
+    display:flex;
+    padding:20px 32px 0;
+    gap:32px;
+    align-items:flex-start;
+    position:relative;
+  }
+
+  /* === 왼쪽: 영역라벨 + 화면 === */
+  .screen-panel {
+    display:flex;
+    gap:0;
+    flex-shrink:0;
+  }
+
+  /* 영역 라벨 (화면 왼쪽) */
+  .labels {
+    display:flex;
+    flex-direction:column;
+    width:70px;
+    flex-shrink:0;
+  }
+  .lbl {
+    flex:none;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    position:relative;
+  }
+  .lbl-text {
+    font-size:12px;
+    font-weight:600;
+    color:#888;
+    text-align:right;
+    padding-right:12px;
+    line-height:1.3;
+  }
+
+  /* 화면 프레임 */
+  .frame {
+    width:360px;
+    background:var(--surface);
+    border:1px solid #ccc;
+    border-radius:12px;
+    overflow:visible;
+    flex-shrink:0;
+    position:relative;
+  }
+  .zone {
+    padding:20px;
+    border-bottom:1px dashed #e0e0e0;
+    position:relative;
+  }
+  .zone:last-child { border-bottom:none; }
+
+  /* 화면 안 번호 마커 */
+  .pin {
+    position:absolute;
+    width:22px; height:22px; border-radius:50%;
+    background:#e0e0e0; color:#888;
+    font-size:11px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    z-index:5;
+    transition: all .2s;
+    user-select:none;
+  }
+  .pin:hover { background:#ccc; }
+  .pin.active { background:var(--accent); color:#fff; box-shadow:0 0 0 3px rgba(37,99,235,.2); }
+
+  /* 클릭 시 영역 하이라이트 */
+  .zone-highlight {
+    display:none;
+    position:absolute;
+    inset:4px;
+    border:2px solid var(--accent);
+    border-radius:8px;
+    pointer-events:none;
+    z-index:4;
+  }
+  .zone.active .zone-highlight { display:block; }
+
+  /* 연결선 SVG */
+  #connSvg {
+    position:absolute;
+    top:0; left:0;
+    pointer-events:none;
+    z-index:3;
+    overflow:visible;
+  }
+
+  /* === 오른쪽: 항목설명 === */
+  .items {
+    flex:1;
+    min-width:220px;
+    max-width:320px;
+  }
+  .itm > div:nth-child(2) { flex:1; min-width:0; }
+  .itm {
+    display:flex;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid #eee;
+    align-items:flex-start;
+    border-radius:6px;
+    transition: background .2s;
+    margin:0 -8px;
+    padding-left:8px;
+    padding-right:8px;
+  }
+  .itm:last-child { border-bottom:none; }
+  .itm.active { background:#e8eefb; }
+  .num {
+    width:24px; height:24px; border-radius:50%;
+    background:#e0e0e0; color:#888; font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1px;
+    transition: all .2s;
+  }
+  .itm.active .num { background:var(--accent); color:#fff; }
+  .itm-title { font-size:13px; font-weight:700; margin-bottom:2px; }
+  .itm-desc { font-size:12px; color:#777; line-height:1.5; }
+
+  /* === 오른쪽: 상세내용 컬럼 === */
+  .detail-col { flex:1; min-width:260px; max-width:400px; }
+  .dtl { padding:14px 0 14px 20px; border-bottom:1px solid #eee; border-left:2px solid #e8eefb; min-height:53px; transition:border-left-color .2s, background .2s; }
+  .dtl:last-child { border-bottom:none; }
+  .dtl.active { border-left-color:#2563eb; background:#f5f8ff; border-radius:0 6px 6px 0; }
+  .detail-label { font-size:10px; font-weight:700; color:#b0b0b0; letter-spacing:0.07em; text-transform:uppercase; margin-bottom:6px; }
+  .dtl-body { font-size:12px; color:#666; line-height:1.5; }
+  .itm-note { font-size:11px; color:#aaa; margin-top:4px; font-style:italic; }
+
+  /* 프로그래스바 */
+  .progress-bar {
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    padding:16px 14px;
+  }
+  .prog-group {
+    margin-bottom:12px;
+  }
+  .prog-group:last-child { margin-bottom:0; }
+  .prog-group-title {
+    font-size:11px;
+    font-weight:700;
+    color:#555;
+    margin-bottom:6px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .prog-group-title .step-num {
+    width:18px; height:18px; border-radius:50%;
+    background:#e0e0e0; color:#888;
+    font-size:10px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .prog-group-title .step-num.active { background:var(--accent); color:#fff; }
+  .prog-step {
+    font-size:11px;
+    color:#aaa;
+    padding:3px 0 3px 26px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .prog-step .dot {
+    width:8px; height:8px; border-radius:50%;
+    background:#ddd;
+    flex-shrink:0;
+  }
+  .prog-step .dot.current { background:var(--accent); }
+  .prog-step .dot.done { background:#22c55e; }
+  .prog-step.current { color:var(--accent); font-weight:600; }
+
+  /* 하단 안내 */
+  .footer-note {
+    padding:20px 32px 0;
+  }
+  .note-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:28px;
+  }
+  .note-title {
+    font-size:14px; font-weight:700; margin-bottom:12px;
+    padding-left:12px;
+    border-left:3px solid var(--accent);
+  }
+  .note-body { font-size:12px; color:#777; line-height:1.7; }
+
+  /* 조회결과 카드 */
+  .result-card {
+    background:#f7f7f5;
+    border:1px solid #e0e0e0;
+    border-radius:8px;
+    padding:12px 14px;
+    margin-top:8px;
+  }
+  .result-row {
+    font-size:11px;
+    color:#666;
+    padding:3px 0;
+    display:flex;
+    gap:8px;
+  }
+  .result-label {
+    color:#aaa;
+    min-width:60px;
+    flex-shrink:0;
+  }
+  /* 상태분기 다이어그램 */
+  .state-diagram { padding:20px 32px 10px; }
+  .state-card { background:#fff; border:1px solid #ddd; border-radius:12px; padding:28px; }
+  .state-title { font-size:14px; font-weight:700; margin-bottom:16px; padding-left:12px; border-left:3px solid #f59e0b; }
+  .state-flow { display:flex; flex-direction:column; gap:10px; font-size:12px; }
+  .state-box { padding:7px 13px; border-radius:6px; font-weight:600; font-size:11px; }
+  .state-pass { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+  .state-fail { background:#fef2f2; color:#991b1b; border:1px solid #fca5a5; }
+  .state-warn { background:#fef9ec; color:#92400e; border:1px solid #fde68a; }
+
+  ::-webkit-scrollbar{display:none !important;} *{scrollbar-width:none !important;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="crumb"><span>가입</span><span class="s">›</span><span>법인회원가입</span><span class="s">›</span><span>법인정보입력</span></div>
+  <h1 class="title">법인정보입력 (일본)</h1>
+  <span class="sid">REG-COM-003</span>
+</header>
+
+<div class="main">
+
+  <!-- 왼쪽: 영역라벨 + 화면 -->
+  <div class="screen-panel">
+
+    <div style="position:relative;display:flex;">
+      <div class="labels" id="labels">
+        <div class="lbl"><span class="lbl-text">프로그래스<br>영역</span></div>
+        <div class="lbl"><span class="lbl-text">상단 영역</span></div>
+        <div class="lbl"><span class="lbl-text">입력 영역</span></div>
+        <div class="lbl"><span class="lbl-text">하단 버튼<br>영역</span></div>
+      </div>
+      <svg id="bracketSvg" width="24" style="flex-shrink:0;overflow:visible;"></svg>
+    </div>
+
+    <!-- 화면 프레임 -->
+    <div class="frame" id="frame">
+
+      <!-- 프로그래스 영역 -->
+      <div class="zone" id="z0" data-idx="">
+        <div class="zone-highlight"></div>
+        <div class="progress-bar">
+          <div class="prog-group">
+            <div class="prog-group-title"><span class="step-num active">1</span> 법인</div>
+            <div class="prog-step current"><span class="dot current"></span>법인정보 입력</div>
+            <div class="prog-step"><span class="dot"></span>실질적지배자정보 입력</div>
+          </div>
+          <div class="prog-group">
+            <div class="prog-group-title"><span class="step-num">2</span> 담당자</div>
+            <div class="prog-step"><span class="dot"></span>담당자정보 입력</div>
+            <div class="prog-step"><span class="dot"></span>담당자 본인확인</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 상단 영역 -->
+      <div class="zone" id="z1" data-idx="">
+        <div class="zone-highlight"></div>
+        <div style="font-size:18px;font-weight:800;color:#222;padding-bottom:4px;">법인정보입력</div>
+        <div style="font-size:11px;color:#aaa;">법인 기본 정보를 입력해주세요</div>
+      </div>
+
+      <!-- 입력 영역 -->
+      <div class="zone" id="z2" data-idx="0,1,2,3,4">
+        <div class="zone-highlight"></div>
+
+        <!-- ① 법인소재지 -->
+        <div class="item-area" data-highlight="0" style="position:relative;margin-bottom:16px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="padding:12px 14px;border-bottom:2px solid #222;font-size:13px;color:#333;display:flex;align-items:center;justify-content:space-between;">
+            <span>🇯🇵 일본</span>
+            <span style="font-size:10px;color:#aaa;">▼</span>
+          </div>
+          <div style="font-size:10px;color:#aaa;margin-top:4px;">법인소재지</div>
+          <div class="pin" data-idx="0" style="top:-6px;right:-8px;">1</div>
+        </div>
+
+        <!-- ② 법인번호 + 조회 -->
+        <div class="item-area" data-highlight="1" style="position:relative;margin-bottom:16px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="display:flex;gap:8px;align-items:stretch;">
+            <div style="flex:1;padding:12px 14px;border-bottom:1.5px solid #ccc;font-size:13px;color:#aaa;">법인번호 13자리</div>
+            <div style="padding:12px 16px;background:#e8e8e8;border-radius:6px;font-size:12px;color:#888;font-weight:600;white-space:nowrap;">조회</div>
+          </div>
+          <div class="pin" data-idx="1" style="top:-6px;right:-8px;">2</div>
+        </div>
+
+        <!-- ③ 조회결과 카드 -->
+        <div class="item-area" data-highlight="2" style="position:relative;margin-bottom:16px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div class="result-card">
+            <div class="result-row"><span class="result-label">법인명(한자)</span><span>株式会社サンプル</span></div>
+            <div class="result-row"><span class="result-label">카타카나</span><span>カブシキガイシャサンプル</span></div>
+            <div class="result-row"><span class="result-label">본점주소</span><span>東京都千代田区...</span></div>
+          </div>
+          <div class="pin" data-idx="2" style="top:-6px;right:-8px;">3</div>
+        </div>
+
+        <!-- ④ 상장여부 -->
+        <div class="item-area" data-highlight="3" style="position:relative;margin-bottom:16px;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="font-size:11px;color:#888;margin-bottom:8px;">상장여부</div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;padding:10px;text-align:center;border:1.5px solid #ccc;border-radius:6px;font-size:12px;color:#aaa;">상장</div>
+            <div style="flex:1;padding:10px;text-align:center;border:1.5px solid var(--accent);border-radius:6px;font-size:12px;color:var(--accent);font-weight:600;background:#e8eefb;">비상장</div>
+          </div>
+          <div class="pin" data-idx="3" style="top:-6px;right:-8px;">4</div>
+        </div>
+
+        <!-- ⑤ 자본금 -->
+        <div class="item-area" data-highlight="4" style="position:relative;padding:4px;border-radius:6px;border:2px solid transparent;">
+          <div style="font-size:11px;color:#888;margin-bottom:8px;">자본금</div>
+          <div style="display:flex;gap:8px;">
+            <div style="flex:1;padding:10px;text-align:center;border:1.5px solid #ccc;border-radius:6px;font-size:12px;color:#aaa;">5억엔 미만</div>
+            <div style="flex:1;padding:10px;text-align:center;border:1.5px solid #ccc;border-radius:6px;font-size:12px;color:#aaa;">5억엔 이상</div>
+          </div>
+          <div class="pin" data-idx="4" style="top:-6px;right:-8px;">5</div>
+        </div>
+
+      </div>
+
+      <!-- 하단 버튼 영역 -->
+      <div class="zone" id="z3" data-idx="5">
+        <div class="zone-highlight"></div>
+        <div style="padding:14px;border-radius:8px;border:1.5px solid #ccc;color:#aaa;text-align:center;font-size:14px;font-weight:700;position:relative;">
+          다음
+          <div class="pin" data-idx="5" style="top:-8px;right:-8px;">6</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- 연결선 SVG -->
+  <svg id="connSvg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;overflow:visible;"></svg>
+
+  <!-- 오른쪽: 항목설명 -->
+  <div class="items" id="items">
+
+    <div class="itm" data-idx="0">
+      <div class="num">1</div>
+      <div>
+        <div class="itm-title">법인소재지</div>
+        <div class="itm-desc">
+          · 디폴트: 일본(🇯🇵) 선택 상태<br>
+          · 드롭다운으로 국가 변경 가능<br>
+          · 일본 선택 시 → 현재 화면(REG-COM-003) 유지<br>
+          · 일본 외 국가 선택 시 → 해외 법인정보입력 화면(REG-COM-005-overseas)으로 전환<br>
+          · 국가 드롭다운: 상위 7개국(일본, 싱가포르, 중국, 한국, 홍콩, 대만, 호주) 우선 노출 → 구분선 → 나머지 가나다순, 검색 기능 포함
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="1">
+      <div class="num">2</div>
+      <div>
+        <div class="itm-title">법인번호 + 조회</div>
+        <div class="itm-desc">
+          · 빈 값이 디폴트<br>
+          · 숫자만 입력 가능, 13자리 고정<br>
+          · 13자리 입력 완료 시 조회 버튼 활성화<br>
+          · 조회 클릭 → 국세청(法人番号公表サイト) API 호출<br>
+          · 조회 성공 → ③ 조회결과 카드 노출<br>
+          · 조회 실패 시 → <strong style="color:#e53935;">"법인번호 조회에 실패했습니다"</strong> + 직접입력 모드 전환 링크 노출<br>
+          · 직접입력 모드: 법인명(한자), 법인명(카타카나), 본점주소를 수동 입력하는 필드 노출
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="2">
+      <div class="num">3</div>
+      <div>
+        <div class="itm-title">조회결과 카드</div>
+        <div class="itm-desc">
+          · ② 조회 성공 시에만 노출<br>
+          · 표시 항목: 법인명(한자), 법인명(카타카나), 본점주소<br>
+          · 읽기전용 — 사용자 수정 불가<br>
+          · 법인번호 재입력 시 카드 초기화<br>
+          · 직접입력 모드에서는 카드 대신 편집 가능한 입력 필드 노출
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="3">
+      <div class="num">4</div>
+      <div>
+        <div class="itm-title">상장여부</div>
+        <div class="itm-desc">
+          · <strong>적격기관 리스트에 없는 법인에게만 표시</strong> — 리스트 등재 법인은 내부 DB에서 자동 확인하므로 미표시<br>
+          · 미선택이 디폴트<br>
+          · 상장 / 비상장 중 1개만 선택 가능<br>
+          · 상장 선택 → ⑤ 자본금 영역 숨김, 다음 버튼 활성화 (UBO 입력 패스)<br>
+          · 비상장 선택 → ⑤ 자본금 영역 노출
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="4">
+      <div class="num">5</div>
+      <div>
+        <div class="itm-title">자본금</div>
+        <div class="itm-desc">
+          · <strong>적격기관 리스트에 없는 법인 + 비상장 선택 시에만 노출</strong><br>
+          · 미선택이 디폴트<br>
+          · 5억엔 미만 / 5억엔 이상 중 1개만 선택<br>
+          · 5억엔 이상 → 특정투자자 자격 인정, UBO 입력(REG-COM-005)으로 이동<br>
+          · 5억엔 미만 → 자격 없음, 매도 불가 안내(REG-COM-012)로 이동
+        </div>
+      </div>
+    </div>
+
+    <div class="itm" data-idx="5">
+      <div class="num">6</div>
+      <div>
+        <div class="itm-title">다음 버튼</div>
+        <div class="itm-desc">
+          · 비활성이 디폴트, 비활성 시 클릭 불가<br>
+          · 활성 조건: ② 법인번호 조회 완료(또는 직접입력 완료) + 적격기관 X인 경우 ④ 상장여부 선택 + (비상장 시) ⑤ 자본금 선택<br>
+          · 클릭 시 적격기관 판정 결과에 따라 분기 → 상세내용 참조
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- 오른쪽: 상세내용 -->
+  <div class="detail-col" id="detailCol">
+    <div class="dtl" data-idx="0"></div>
+    <div class="dtl" data-idx="1"></div>
+    <div class="dtl" data-idx="2"></div>
+    <div class="dtl" data-idx="3"></div>
+    <div class="dtl" data-idx="4"></div>
+    <div class="dtl" data-idx="5">
+      <div class="detail-label">케이스별 분기 (요약)</div>
+      <div class="dtl-body" style="margin-bottom:12px;">
+        · 적격기관 O + 상장 → UBO 패스, 담당자정보입력(REG-COM-006)<br>
+        · 적격기관 O + 비상장 → UBO 입력(REG-COM-005)<br>
+        · 적격기관 X + 상장 → UBO 패스, 담당자정보입력(REG-COM-006)<br>
+        · 적격기관 X + 비상장 + 5억엔 이상 → UBO 입력(REG-COM-005)<br>
+        · 적격기관 X + 비상장 + 5억엔 미만 → 매도 불가 안내(REG-COM-012)
+      </div>
+      <div class="detail-label">특정투자자 판정 로직 (일본 법인)</div>
+      <div class="dtl-body">
+        <div style="font-size:11.5px;color:#555;line-height:2;padding:10px 12px;background:#f7f7f5;border-radius:8px;margin-bottom:8px;">
+          법인번호 입력 → <strong>적격기관 리스트 확인</strong> (내부 DB 자동)<br>
+          &nbsp;&nbsp;├─ <span style="color:#166534;font-weight:600;">적격기관 O</span> → 상장 여부 내부 DB 자동 확인<br>
+          &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ 상장 → <span style="color:#2563eb;">UBO 패스</span> → 담당자정보입력(REG-COM-006)<br>
+          &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 비상장 → UBO 입력(REG-COM-005) → 담당자정보입력<br>
+          &nbsp;&nbsp;└─ <span style="color:#92400e;font-weight:600;">적격기관 X</span> → 화면에서 상장 여부 직접 질문<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ 상장 → <span style="color:#2563eb;">UBO 패스</span> → 담당자정보입력(REG-COM-006)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 비상장 → 자본금 질문<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ 5억엔 이상 → UBO 입력(REG-COM-005) → 담당자정보입력<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ 5억엔 미만 → 매도 불가 안내(REG-COM-012)
+        </div>
+        <div style="font-size:11px;color:#888;padding:6px 10px;background:#f0f4ff;border-radius:6px;border:1px solid #c7d7fa;">
+          ※ <strong>법인 조합(투자조합 O)</strong>은 법인 판정 결과를 자동 승계 — 별도 자격 확인 없음
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 하단 안내 -->
+<section class="footer-note">
+  <div class="note-card">
+    <div class="note-title">비고</div>
+    <div class="note-body">
+      · 이 화면은 법인소재지가 일본인 경우의 법인정보 입력 화면입니다.<br>
+      · 법인소재지를 일본 외로 변경하면 해외 법인정보입력으로 전환됩니다.<br>
+      · 조회 실패 시 직접입력 모드로 전환하여 법인명/주소를 수동으로 입력할 수 있습니다.<br>
+      · 다음 화면: UBO 입력(REG-COM-005) / 담당자정보입력(REG-COM-006) / 매도 불가 안내(REG-COM-012)<br>
+      <br>
+      <strong>[공통 규칙] 순차 입력</strong><br>
+      · 입력 순서는 위에서 아래로 ①→②→③→④→⑤ 순차 진행<br>
+      · 현재 입력해야 하는 칸의 하단 줄이 <strong>검은색(#222)</strong>으로 표시됨<br>
+      · 아직 차례가 아닌 칸은 회색(#ccc) 줄 유지<br>
+      <br>
+      <strong>[공통 규칙] 스크롤</strong><br>
+      · 내용이 화면을 초과할 경우, 전체 영역이 세로 스크롤됨
+    </div>
+  </div>
+</section>
+
+<script>
+// ── 영역 브래킷 그리기 ──
+function drawBrackets() {
+  const zones = [document.getElementById('z0'), document.getElementById('z1'), document.getElementById('z2'), document.getElementById('z3')];
+  const labels = document.querySelectorAll('.lbl');
+  const svg = document.getElementById('bracketSvg');
+  if (!zones.length || !labels.length) return;
+
+  let totalH = 0;
+  zones.forEach((z, i) => {
+    const h = z.offsetHeight;
+    if (labels[i]) labels[i].style.height = h + 'px';
+    totalH += h;
+  });
+
+  svg.setAttribute('height', totalH);
+  svg.innerHTML = '';
+
+  let y = 0;
+  zones.forEach((z) => {
+    const h = z.offsetHeight;
+    const top = y + 6, bot = y + h - 6, x = 4;
+
+    const mk = (tag, attrs) => {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
+      return el;
+    };
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:top,x2:x+8,y2:top,stroke:'#bbb','stroke-width':'1'}));
+    svg.appendChild(mk('line',{x1:x,y1:bot,x2:x+8,y2:bot,stroke:'#bbb','stroke-width':'1'}));
+    y += h;
+  });
+}
+
+// ── 연결선 그리기 ──
+function drawConnectors() {
+  const svg = document.getElementById('connSvg');
+  const main = document.querySelector('.main');
+  if (!svg || !main) return;
+
+  svg.innerHTML = '';
+  const mRect = main.getBoundingClientRect();
+
+  document.querySelectorAll('.pin').forEach(pin => {
+    const idx = pin.dataset.idx;
+    const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+    if (!itm) return;
+
+    const pRect = pin.getBoundingClientRect();
+    const iRect = itm.querySelector('.num').getBoundingClientRect();
+
+    const x1 = pRect.right - mRect.left + 4;
+    const y1 = pRect.top + pRect.height/2 - mRect.top;
+    const x2 = iRect.left - mRect.left - 4;
+    const y2 = iRect.top + iRect.height/2 - mRect.top;
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
+    line.setAttribute('stroke', '#ccc');
+    line.setAttribute('stroke-width', '1');
+    line.setAttribute('stroke-dasharray', '4,3');
+    line.setAttribute('data-idx', idx);
+    svg.appendChild(line);
+  });
+}
+
+// ── 클릭 인터랙션 ──
+let activeIdx = null;
+
+function selectItem(idx) {
+  if (activeIdx === idx) { clearSelection(); return; }
+  clearSelection();
+  activeIdx = idx;
+
+  const pin = document.querySelector(`.pin[data-idx="${idx}"]`);
+  if (pin) pin.classList.add('active');
+
+  const area = document.querySelector(`.item-area[data-highlight="${idx}"]`);
+  if (area) area.style.borderColor = '#2563eb';
+
+  document.querySelectorAll('.zone').forEach(z => {
+    const zoneIdxList = (z.dataset.idx || '').split(',');
+    if (zoneIdxList.length === 1 && zoneIdxList.includes(idx)) z.classList.add('active');
+  });
+
+  const itm = document.querySelector(`.itm[data-idx="${idx}"]`);
+  if (itm) itm.classList.add('active');
+  const dtl = document.querySelector(`.dtl[data-idx="${idx}"]`);
+  if (dtl) dtl.classList.add('active');
+
+  const line = document.querySelector(`#connSvg line[data-idx="${idx}"]`);
+  if (line) { line.setAttribute('stroke', '#2563eb'); line.setAttribute('stroke-width', '1.5'); }
+}
+
+function clearSelection() {
+  activeIdx = null;
+  document.querySelectorAll('.pin.active').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.zone.active').forEach(z => z.classList.remove('active'));
+  document.querySelectorAll('.itm.active').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.dtl.active').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.item-area').forEach(a => a.style.borderColor = 'transparent');
+  document.querySelectorAll('#connSvg line').forEach(l => { l.setAttribute('stroke','#ccc'); l.setAttribute('stroke-width','1'); });
+}
+
+document.addEventListener('click', (e) => {
+  const pin = e.target.closest('.pin');
+  const itm = e.target.closest('.itm');
+  const dtl = e.target.closest('.dtl');
+  if (pin) { selectItem(pin.dataset.idx); return; }
+  if (itm && itm.dataset.idx !== undefined) { selectItem(itm.dataset.idx); return; }
+  if (dtl && dtl.dataset.idx !== undefined) { selectItem(dtl.dataset.idx); return; }
+  if (!e.target.closest('.zone') && !e.target.closest('.itm') && !e.target.closest('.dtl')) clearSelection();
+});
+
+window.addEventListener('load', () => { drawBrackets(); drawConnectors(); });
+window.addEventListener('resize', () => { drawBrackets(); drawConnectors(); });
+</script>
+
+<script>(function(){function r(){var h=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight);window.parent&&window.parent.postMessage({type:"iframeHeight",h:h},"*");}if(document.readyState==="complete"){r();setTimeout(r,400);setTimeout(r,1200);}else{window.addEventListener("load",function(){r();setTimeout(r,400);setTimeout(r,1200);});}})();</script>
+</body>
+</html>
